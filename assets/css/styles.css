@@ -185,12 +185,17 @@ main {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 96px;
+    height: 96px;
     color: var(--text-secondary);
     border: 1px solid var(--border);
-    border-radius: 999px;
+    border-radius: 24px;
     transition: all .2s ease;
+}
+
+.social-icon svg {
+    width: 48px;
+    height: 48px;
 }
 
 .social-icon:hover {

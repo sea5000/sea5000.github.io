@@ -23,7 +23,7 @@
         return '<a class="social-icon" href="' + href + '"' +
             (type === "email" ? "" : ' target="_blank" rel="noopener"') +
             ' title="' + label + '" aria-label="' + label + '">' +
-            '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">' +
+            '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
             ICON_PATHS[type] +
             "</svg></a>";
     }
