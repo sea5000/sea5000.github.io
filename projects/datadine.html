@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataDine — Vienna Restaurant Finder — Spencer E. Anderson</title>
+    <meta name="description" content="DataDine — a Python Vienna restaurant finder built for a data-sorting and truth-table coursework.">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+
+    <div data-header data-current=""></div>
+
+    <main class="container">
+
+        <section class="project-hero">
+            <div class="tag-row" style="margin-top:0">
+                <span class="tag">Python</span>
+                <span class="tag">Sorting Algorithms</span>
+                <span class="tag">OOP</span>
+                <span class="tag">OpenStreetMap</span>
+            </div>
+            <h1>
+                DataDine
+            </h1>
+            <p class="lead meta">
+                A console-based Vienna restaurant finder: live venue data from OpenStreetMap, search and
+                filtering with truth-table-style AND/OR logic, three sorting algorithms, and a built-in
+                algorithm benchmark. Built as my FCSP course final project.
+            </p>
+            <div class="btn-row">
+                <a class="btn btn-primary" href="https://github.com/sea5000/DataDine" target="_blank" rel="noopener">View Code</a>
+                <a class="btn btn-outline" href="../projects.html">&larr; All Projects</a>
+            </div>
+        </section>
+
+        <div class="project-layout">
+
+            <div class="prose">
+                <h3>Overview</h3>
+                <p>
+                    This was my final project for a computer-science coursework focused on complex data
+                    sorting and truth tables. The assignment required building an object-oriented tool that
+                    sorts complex data objects by numerical properties, applies logical-proposition
+                    evaluation as a secondary criterion, and analyzes the performance of loop-based versus
+                    recursive algorithms.
+                </p>
+                <p>
+                    I chose a Vienna restaurant dataset pulled live from OpenStreetMap. DataDine reverse-geocodes
+                    addresses through Vienna's open-data service, parses real opening hours (including overnight
+                    and 24:00 ranges), and lets a user search, filter, and sort venues by cuisine, district,
+                    open status, outdoor seating, and wheelchair accessibility.
+                </p>
+
+                <h3>Features</h3>
+                <ul>
+                    <li>Live data pull from OpenStreetMap (restaurants, pubs, cafes, fast food, bars, biergartens, ice cream).</li>
+                    <li>Address normalization via Vienna's OGD reverse-geocoding API with retry + rate-limit handling.</li>
+                    <li>Opening-hours parsing supporting overnight ranges and 24:00 end times.</li>
+                    <li>Search &amp; filter with AND/OR truth-table-style logical evaluation (2+ conditional variables).</li>
+                    <li>Three hand-written sort algorithms — bubble, insertion, merge — with a benchmark mode that runs loop-based vs. recursive sorting live.</li>
+                    <li>Distance-aware sorting from a user-entered address (geodesic math).</li>
+                    <li>PrettyTable output and CSV export of results.</li>
+                </ul>
+
+                <h3>Tech &amp; Approach</h3>
+                <p>
+                    Pure Python, using <code>osmnx</code> and <code>shapely</code> to pull venue geometry from
+                    OpenStreetMap, <code>pandas</code> for dataset handling, <code>geopy</code> for geodesic
+                    distance, <code>pyproj</code> for coordinate-system transforms (WGS84 ↔ EPSG:31256),
+                    <code>requests</code> for the Vienna OGD address service, <code>prettytable</code> for
+                    console output, and <code>tqdm</code> progress visualization. The code is organized
+                    around an abstract <code>Place</code> base class with <code>Restaurant</code> and
+                    <code>Chain</code> subclasses, plus <code>DataBase</code>, <code>Location</code>,
+                    <code>OpenHours</code>, and a custom <code>MenuBreak</code> exception — demonstrating
+                    inheritance, abstraction, polymorphism, and robust error handling.
+                </p>
+
+                <h3>Outcome</h3>
+                <p>
+                    The tool processes roughly 6,200 Viennese venues, filters them with logical criteria,
+                    and benchmarks three sorting algorithms on live objects. It maps cleanly onto every
+                    written rubric category — object-oriented design, data types, loop &amp; recursion,
+                    sorting, searching, truth-table logical complexity, performance analysis, functions,
+                    CSV data handling, and error handling. A full rubric mapping lives in the repository README.
+                </p>
+            </div>
+
+            <aside class="project-side">
+                <div class="card">
+                    <h3>Details</h3>
+                    <ul class="contact-list">
+                        <li>
+                            <span class="label">Role</span>
+                            <span class="value">Solo developer</span>
+                        </li>
+                        <li>
+                            <span class="label">Year</span>
+                            <span class="value">2025</span>
+                        </li>
+                        <li>
+                            <span class="label">Status</span>
+                            <span class="value">Complete — course submission</span>
+                        </li>
+                        <li>
+                            <span class="label">Link</span>
+                            <span class="value">
+                                <a href="https://github.com/sea5000/DataDine" target="_blank" rel="noopener">github.com/sea5000/DataDine</a>
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+
+        </div>
+    </main>
+
+    <div data-footer></div>
+
+    <script src="../assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TreeEquity — European Urban Tree Cover Analysis — Spencer E. Anderson</title>
+    <meta name="description" content="TreeEquity — a three-capstone project analyzing urban tree equity across European cities with a Flask dashboard.">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+
+    <div data-header data-current=""></div>
+
+    <main class="container">
+
+        <section class="project-hero">
+            <div class="tag-row" style="margin-top:0">
+                <span class="tag">Python</span>
+                <span class="tag">GIS</span>
+                <span class="tag">SQL</span>
+                <span class="tag">Flask</span>
+                <span class="tag">Dashboard</span>
+            </div>
+            <h1>
+                TreeEquity
+            </h1>
+            <p class="lead meta">
+                A three-capstone, end-to-end data project answering how urban tree canopy relates to
+                population density across European cities — from satellite raster and Eurostat data, through
+                a normalized SQLite database, to a Flask dashboard with two interactive views.
+            </p>
+            <div class="btn-row">
+                <a class="btn btn-primary" href="https://github.com/sea5000/TreeEquity" target="_blank" rel="noopener">View Code</a>
+                <a class="btn btn-outline" href="../projects.html">&larr; All Projects</a>
+            </div>
+        </section>
+
+        <div class="project-layout">
+
+            <div class="prose">
+                <h3>Overview</h3>
+                <p>
+                    Built for a knowledge-extraction course, TreeEquity is a full data lifecycle project
+                    split into three capstones. The core question: <strong>how does urban tree canopy cover
+                    relate to population density — and what does that mean for tree equity — across European
+                    cities?</strong> Each capstone handed off its output to the next, ending in a working,
+                    interactive dashboard for exploring where Europe&rsquo;s urban forests thrive and where
+                    they need investment.
+                </p>
+
+                <h3>Capstone 1 — Data collection &amp; cleaning</h3>
+                <p>
+                    A geospatial pipeline built with <code>rasterio</code>, <code>fiona</code>, and
+                    <code>shapely</code> combining four sources: Eurostat NUTS population data, Copernicus
+                    Tree Cover Density 2015 (20&thinsp;m raster), Copernicus Urban Atlas 2021 Functional Urban
+                    Area boundaries, and the NUTS2021 metropolitan-name mapping.
+                </p>
+                <ul>
+                    <li>Clipped the tree raster to each city&rsquo;s <em>actual</em> FUA boundary (not a fixed buffer) to compute tree cover in km² and %.</li>
+                    <li>Normalized city names (e.g. Wien &rarr; Vienna) to match NUTS codes with FUA polygons.</li>
+                    <li>Loaded 212 regions; extracted tree-cover data for 89 with FUA matches — in about 10 minutes.</li>
+                </ul>
+
+                <h3>Capstone 2 — Database design</h3>
+                <p>
+                    The collected data became a normalized (3NF) SQLite schema separating administrative
+                    units, physical measurements, and derived metrics across 8 core tables: <code>countries</code>,
+                    <code>regions</code>, <code>cities</code>, <code>urban_trees</code>, <code>urban_trees_ua</code>,
+                    <code>city_rankings</code>, <code>population_annual</code>, and <code>source_metadata</code>.
+                </p>
+                <ul>
+                    <li>Documented conceptual, logical, and physical data models with ER diagrams (PlantUML + PNG).</li>
+                    <li>Explicit primary/foreign keys, NOT NULL, UNIQUE, and composite-UNIQUE constraints for integrity.</li>
+                    <li>Extended in Capstone 3 with a flat <code>city_tree_rankings</code> view — 98 cities across 42 countries.</li>
+                </ul>
+
+                <h3>Capstone 3 — Dashboard</h3>
+                <p>
+                    Two <strong>Flask</strong> dashboards served from the SQLite database, using a JSON API
+                    and CDN chart libraries (Chart.js, Plotly, Leaflet).
+                </p>
+                <ul>
+                    <li>
+                        <strong>Dashboard 1 — European Tree Cover Atlas</strong> (strategic overview):
+                        Leaflet map with equity-colored markers, summary stat cards, equity donut, top-10
+                        bar chart, population-vs-tree scatter + box plot, and a sortable full table.
+                    </li>
+                    <li>
+                        <strong>Dashboard 2 — City Tree Equity Analyzer</strong> (analytical deep-dive):
+                        KPI cards, pop-to-tree ratio horizontal bar, density scatter, side-by-side city
+                        comparison, and a color-coded equity table.
+                    </li>
+                    <li>Cities are tiered by quartile breaks of the population-to-tree ratio (people per km² of tree cover): <em>Excellent &middot; Good &middot; Fair &middot; Needs Improvement</em>.</li>
+                    <li>7 API endpoints power the charts; <code>db_connection.py</code> uses WAL journaling and a row factory.</li>
+                </ul>
+
+                <figure>
+                    <img src="../assets/img/treeequity-dashboard1.png" alt="TreeEquity Dashboard 1 — European Tree Cover Atlas" loading="lazy">
+                    <figcaption>Dashboard 1 — European Tree Cover Atlas: map, equity donut, top-10 bar, scatter, and ranking table.</figcaption>
+                </figure>
+
+                <figure>
+                    <img src="../assets/img/treeequity-dashboard2.png" alt="TreeEquity Dashboard 2 — City Tree Equity Analyzer" loading="lazy">
+                    <figcaption>Dashboard 2 — City Tree Equity Analyzer: KPI cards, pop-to-tree ratio, density scatter, and equity table.</figcaption>
+                </figure>
+
+                <h3>Key findings</h3>
+                <ul>
+                    <li>98 cities analyzed across 42 European countries.</li>
+                    <li>Average tree cover among cities: 3.27%; best city Vatican City (16.90%), worst Reggio Calabria (0.01%).</li>
+                    <li>The dataset grew from 30 cities (Capstone 2) to 98 (Capstone 3).</li>
+                </ul>
+
+                <h3>Tech &amp; Approach</h3>
+                <p>
+                    The stack spans the full data lifecycle. <strong>Capstone 1:</strong> Python, rasterio,
+                    fiona, numpy, pandas, shapely. <strong>Capstone 2:</strong> SQLite 3 with a normalized
+                    3NF schema and PlantUML ER diagrams. <strong>Capstone 3:</strong> Flask + sqlite3
+                    backend, HTML5/CSS3 front end, and Chart.js, Plotly, and Leaflet for visualization.
+                </p>
+
+                <h3>Outcome</h3>
+                <p>
+                    TreeEquity demonstrates the complete arc from raw open data to a deployable analytical
+                    tool: satellite imagery and official statistics converted into a clean database, then
+                    surfaced in dashboards built for two audiences — planners needing a strategic overview
+                    and researchers wanting to compare cities and test hypotheses about density and canopy.
+                </p>
+            </div>
+
+            <aside class="project-side">
+                <div class="card">
+                    <h3>Details</h3>
+                    <ul class="contact-list">
+                        <li>
+                            <span class="label">Role</span>
+                            <span class="value">Solo developer</span>
+                        </li>
+                        <li>
+                            <span class="label">Year</span>
+                            <span class="value">2025–2026</span>
+                        </li>
+                        <li>
+                            <span class="label">Status</span>
+                            <span class="value">Complete — course submission</span>
+                        </li>
+                        <li>
+                            <span class="label">Capstones</span>
+                            <span class="value">1 &mdash; Data · 2 &mdash; Database · 3 &mdash; Dashboard</span>
+                        </li>
+                        <li>
+                            <span class="label">Link</span>
+                            <span class="value">
+                                <a href="https://github.com/sea5000/TreeEquity" target="_blank" rel="noopener">github.com/sea5000/TreeEquity</a>
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+
+        </div>
+    </main>
+
+    <div data-footer></div>
+
+    <script src="../assets/js/main.js"></script>
+</body>
+</html>

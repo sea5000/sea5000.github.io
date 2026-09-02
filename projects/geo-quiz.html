@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEO-QUIZ — U.S. vs Europe Knowledge Study — Spencer E. Anderson</title>
+    <meta name="description" content="GEO-QUIZ — a web-based geography survey and its Python analysis pipeline, testing how well Americans and Europeans know each other's geography.">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+
+    <div data-header data-current=""></div>
+
+    <main class="container">
+
+        <section class="project-hero">
+            <div class="tag-row" style="margin-top:0">
+                <span class="tag">HTML</span>
+                <span class="tag">Firebase</span>
+                <span class="tag">Python</span>
+                <span class="tag">PCA</span>
+            </div>
+            <h1>
+                GEO-QUIZ
+            </h1>
+            <p class="lead meta">
+                A web-based geography quiz and its Python analysis pipeline, built to gather and analyze
+                data for a statistics class — testing the claim that Americans don&rsquo;t know European
+                geography, and vice versa.
+            </p>
+            <div class="btn-row">
+                <a class="btn btn-primary" href="https://github.com/sea5000/GEO-QUIZ" target="_blank" rel="noopener">Quiz Repo</a>
+                <a class="btn btn-primary" href="https://github.com/sea5000/GEO-QUIZ-Analysis" target="_blank" rel="noopener">Analysis Repo</a>
+                <a class="btn btn-outline" href="../projects.html">&larr; All Projects</a>
+            </div>
+        </section>
+
+        <div class="project-layout">
+
+            <div class="prose">
+                <h3>Overview</h3>
+                <p>
+                    For the <em>MS1 &ldquo;Survey in Action&rdquo;</em> assignment in my Math and Statistics
+                    course, my partner Ella and I designed a survey that would answer a fun but testable
+                    question: <strong>do Americans or Europeans know each other&rsquo;s geography better?</strong>
+                    The project is two linked repos: <strong>GEO-QUIZ</strong> builds the survey
+                    instrument, and <strong>GEO-QUIZ-Analysis</strong> pulls, cleans, and analyzes the
+                    responses.
+                </p>
+                <p>
+                    The result is a complete data-collection-to-analysis workflow: a live web quiz served
+                    on Firebase, real participant data stored in a Firebase Realtime Database, and a Python
+                    pipeline that maps results and runs PCA + k-means clustering to surface patterns in
+                    who knows their geography.
+                </p>
+
+                <h3>The survey (GEO-QUIZ)</h3>
+                <p>
+                    Each participant answers <strong>40 randomly selected questions — 20 U.S. states, 20
+                    European countries</strong>. They click answers on interactive SVG maps with immediate
+                    right/wrong feedback. Participants can optionally provide a name and country of origin
+                    (recommended, since it drives the study&rsquo;s grouping). Responses land in a Firebase
+                    Realtime Database for later analysis.
+                </p>
+                <ul>
+                    <li>Vanilla HTML + CSS + JS with embedded interactive SVG maps of the U.S. and Europe.</li>
+                    <li>Randomized 40-question session with instant right/wrong feedback and a final score.</li>
+                    <li>Country-of-origin field captured per participant to compare Americans, Europeans, and everyone else.</li>
+                    <li>Deployed on Firebase Hosting with a Realtime Database backend.</li>
+                    <li>Self-selected participation — a <em>convenience sample</em>, which the assignment asks us to reflect on as a bias.</li>
+                </ul>
+
+                <h3>The analysis (GEO-QUIZ-Analysis)</h3>
+                <p>
+                    The analysis repo pulls the collected responses, cleans them, and produces choropleth-style
+                    map outputs along with PCA and k-means clustering of the response data.
+                </p>
+                <ul>
+                    <li>
+                        <code>firebase_Obj.py</code> — a <code>GeoPull</code> class that authenticates to
+                        Firebase Firestore, downloads responses, normalizes fields, and drives every output.
+                    </li>
+                    <li>
+                        <code>geoPull_Script.py</code> / <code>main.py</code> — data pulls on 24-4-25 and
+                        5-5-25, with per-country (e.g. Austria), per-correctness, and combined map and PCA
+                        exports.
+                    </li>
+                    <li>Choropleth maps of response data across U.S. states and European countries.</li>
+                    <li>
+                        PCA + k-means (<code>sklearn</code>) on standardized correctness/response matrices to
+                        reveal clusters of similar answering behaviour — e.g. which countries group together.
+                    </li>
+                    <li>Tracked data pulls as dated folders with both raw and cleaned CSVs.</li>
+                </ul>
+
+                <figure>
+                    <img src="../assets/img/geoquiz-pca-combined-eu.png" alt="PCA output across European countries from the GEO-QUIZ analysis" loading="lazy">
+                    <figcaption>PCA + k-means output across European countries (combined data pull, 5-5-25).</figcaption>
+                </figure>
+
+                <figure>
+                    <img src="../assets/img/geoquiz-pca-combined-us.png" alt="PCA output across U.S. states from the GEO-QUIZ analysis" loading="lazy">
+                    <figcaption>PCA + k-means output across U.S. states (combined data pull, 5-5-25).</figcaption>
+                </figure>
+
+                <h3>Tech &amp; Approach</h3>
+                <p>
+                    <strong>Survey side:</strong> hand-written HTML/CSS/JS with embedded SVG maps and
+                    Firebase Hosting + Realtime Database for collection. <strong>Analysis side:</strong>
+                    Python 3 with <code>firebase_admin</code> (Firestore), <code>pandas</code> /
+                    <code>numpy</code> for data handling, <code>matplotlib</code> for the map visualizations,
+                    and <code>sklearn</code> (PCA, KMeans, StandardScaler) for the clustering analysis.
+                    Country-of-origin fields allow grouping into U.S., Europe, and combined sets.
+                </p>
+
+                <h3>Outcome</h3>
+                <p>
+                    The pipeline went from a live quiz to cleaned, clustered results: multiple dated data
+                    pulls (4-4, 11-4, 24-4, 5-5), choropleth maps of correctness by region, and PCA/k-means
+                    outputs for Europe, the U.S., Austria-only, and combined groups. It delivered the
+                    full &ldquo;survey in action&rdquo; workflow — design, collect, clean, analyze, and
+                    present — and produced the visual evidence used in the class presentation. The project
+                    also demonstrably tested the study&rsquo;s central hypothesis about geographic knowledge
+                    asymmetry between Americans and Europeans.
+                </p>
+            </div>
+
+            <aside class="project-side">
+                <div class="card">
+                    <h3>Details</h3>
+                    <ul class="contact-list">
+                        <li>
+                            <span class="label">Role</span>
+                            <span class="value">Solo developer (with project partner)</span>
+                        </li>
+                        <li>
+                            <span class="label">Year</span>
+                            <span class="value">2025</span>
+                        </li>
+                        <li>
+                            <span class="label">Status</span>
+                            <span class="value">Complete — course submission</span>
+                        </li>
+                        <li>
+                            <span class="label">Subject</span>
+                            <span class="value">Math &amp; Statistics — MS1 Survey in Action</span>
+                        </li>
+                        <li>
+                            <span class="label">Links</span>
+                            <span class="value">
+                                <a href="https://github.com/sea5000/GEO-QUIZ" target="_blank" rel="noopener">github.com/sea5000/GEO-QUIZ</a><br>
+                                <a href="https://github.com/sea5000/GEO-QUIZ-Analysis" target="_blank" rel="noopener">github.com/sea5000/GEO-QUIZ-Analysis</a>
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+
+        </div>
+    </main>
+
+    <div data-footer></div>
+
+    <script src="../assets/js/main.js"></script>
+</body>
+</html>
