@@ -8,9 +8,9 @@
     };
 
     var NAV_LINKS = [
-        { href: "index.html",  label: "Home",     key: "home" },
-        { href: "about.html",  label: "About",    key: "about" },
-        { href: "projects.html", label: "Projects", key: "projects" }
+        { href: "/index.html",  label: "Home",     key: "home" },
+        { href: "/about.html",  label: "About",    key: "about" },
+        { href: "/projects.html", label: "Projects", key: "projects" }
     ];
 
     function templateString(str, data) {
@@ -28,7 +28,7 @@
         return templateString(
             '<header data-injected class="site-header">' +
             '  <nav class="nav container" aria-label="Primary">' +
-            '    <a class="brand" href="index.html">spencer<span class="dot">-</span>anderson</a>' +
+            '    <a class="brand" href="/index.html">spencer<span class="dot">-</span>anderson</a>' +
             '    <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">' +
             '      <span></span><span></span><span></span>' +
             '    </button>' +
@@ -59,9 +59,9 @@
             '      </div>' +
             '      <div>' +
             '        <ul class="footer-links">' +
-            '          <li><a href="index.html">Home</a></li>' +
-            '          <li><a href="about.html">About</a></li>' +
-            '          <li><a href="projects.html">Projects</a></li>' +
+            '          <li><a href="/index.html">Home</a></li>' +
+            '          <li><a href="/about.html">About</a></li>' +
+            '          <li><a href="/projects.html">Projects</a></li>' +
             '        </ul>' +
             '        <div class="footer-social">' +
             '          <a href="{{github}}" target="_blank" rel="noopener">GitHub</a>' +
