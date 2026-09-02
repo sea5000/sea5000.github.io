@@ -178,21 +178,22 @@ main {
 .nav-social {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
+    gap: var(--space-2);
 }
 
-.nav-social a {
+.social-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
     color: var(--text-secondary);
-    text-decoration: none;
-    font-size: var(--type-caption);
-    font-weight: 600;
     border: 1px solid var(--border);
     border-radius: 999px;
-    padding: var(--space-2) var(--space-3);
     transition: all .2s ease;
 }
 
-.nav-social a:hover {
+.social-icon:hover {
     color: var(--ink-steel);
     background: var(--surface-2);
     border-color: var(--steel-blue);
@@ -678,23 +679,14 @@ main {
 
 .footer-social {
     display: flex;
-    gap: var(--space-3);
+    gap: var(--space-2);
     margin-top: var(--space-4);
 }
 
-.footer-social a {
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-size: var(--type-caption);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: var(--space-1) var(--space-3);
-}
-
-.footer-social a:hover {
-    color: var(--ink-steel);
-    background: var(--surface-2);
-    border-color: var(--steel-blue);
+.social-row {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
 }
 
 .footer-bottom {
