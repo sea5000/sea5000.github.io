@@ -3,3 +3,7 @@ Thumbs.db
 *.swp
 *~
 critique.md
+
+# Personal documents (not exposed)
+*.md
+!README.md
