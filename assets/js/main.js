@@ -53,8 +53,8 @@
             '      <div>' +
             '        <span class="footer-brand">spencer<span class="dot">-</span>anderson</span>' +
             '        <p class="muted" style="margin-top:.5rem;font-size:var(--type-caption)">' +
-            '          Intelligence analyst & data science student.<br>' +
-            '          Building toward a portfolio of analytic and programming work.' +
+            '          Intelligence analyst turned data scientist.<br>' +
+            '          Turning complex data into decisions.' +
             '        </p>' +
             '      </div>' +
             '      <div>' +
