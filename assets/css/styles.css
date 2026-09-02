@@ -204,6 +204,17 @@ main {
     border-color: var(--steel-blue);
 }
 
+.nav-social .social-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 18px;
+}
+
+.nav-social .social-icon svg {
+    width: 30px;
+    height: 30px;
+}
+
 .nav-toggle {
     display: none;
     flex-direction: column;
@@ -706,11 +717,39 @@ main {
 /* Experience cards */
 .exp-list {
     display: grid;
-    gap: var(--space-6);
+    gap: 2.5rem;
 }
 
 .exp-card {
     padding: var(--space-8);
+    position: relative;
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+
+.exp-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    background: linear-gradient(90deg, var(--steel-blue), var(--keppel));
+    opacity: 0;
+    transform: scaleX(.6);
+    transform-origin: left;
+    transition: opacity .25s ease, transform .25s ease;
+}
+
+.exp-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-3);
+}
+
+.exp-card:hover::before {
+    opacity: 1;
+    transform: scaleX(1);
 }
 
 .exp-head {
