@@ -164,7 +164,7 @@ main {
     font-weight: 700;
 }
 
-.nav-links a.active::after {
+.nav-links a::after {
     content: "";
     position: absolute;
     left: 0;
@@ -173,6 +173,14 @@ main {
     height: 2px;
     border-radius: 2px;
     background: var(--ink-steel);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform .28s cubic-bezier(.22, .61, .36, 1);
+}
+
+.nav-links a:hover::after,
+.nav-links a.active::after {
+    transform: scaleX(1);
 }
 
 .nav-social {
@@ -911,4 +919,91 @@ code {
         gap: var(--space-3);
         text-align: center;
     }
+}
+
+/* ================= Motion & polish ================= */
+
+/* Scroll reveal (elements marked with data-reveal) */
+.js [data-reveal] {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity .6s ease, transform .6s cubic-bezier(.22, .61, .36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+}
+
+.js [data-reveal].is-revealed {
+    opacity: 1;
+    transform: none;
+}
+
+/* Hero entrance — elements marked with data-hero-stage */
+.js .hero [data-hero-stage] { opacity: 0; }
+
+.js .hero [data-hero-stage].hero-in {
+    animation: hero-rise .7s cubic-bezier(.22, .61, .36, 1) both;
+}
+
+@keyframes hero-rise {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1;  transform: none; }
+}
+
+/* Scroll progress bar (injected by JS) */
+.scroll-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 100%;
+    transform: scaleX(0);
+    transform-origin: left;
+    z-index: 100;
+    background: linear-gradient(90deg, var(--steel-blue), var(--keppel));
+    pointer-events: none;
+}
+
+/* Back to top button (injected by JS) */
+.back-to-top {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 90;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--surface-0);
+    border: 1px solid var(--border-strong);
+    box-shadow: var(--shadow-2);
+    color: var(--ink-steel);
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: opacity .25s ease, transform .25s ease, visibility .25s ease, background .2s ease;
+}
+
+.back-to-top svg { width: 20px; height: 20px; }
+
+.back-to-top.show { opacity: 1; visibility: visible; transform: none; }
+
+.back-to-top:hover { background: var(--surface-2); }
+
+/* Page transitions (View Transitions API — crossfade, graceful fallback) */
+@keyframes vt-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+::view-transition-old(root) { animation: none; }
+::view-transition-new(root) { animation: vt-in .42s ease both; }
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .js [data-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; }
+    .js .hero [data-hero-stage] { opacity: 1 !important; animation: none !important; }
+    .back-to-top, .card-hover, .project-card, .exp-card, .social-icon { transition: none !important; }
+    .nav-links a::after { transition: none !important; }
 }

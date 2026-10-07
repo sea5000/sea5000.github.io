@@ -14,16 +14,16 @@
     <main>
 
         <section class="container hero">
-            <div class="portrait" role="img" aria-label="Portrait of Spencer E. Anderson">
+            <div class="portrait" data-hero-stage data-delay="0" role="img" aria-label="Portrait of Spencer E. Anderson">
                 <img src="assets/img/SA_ProfilePic.jpg" alt="Spencer E. Anderson">
                 <div class="avatar-fallback">
                     <span>SA</span>
                 </div>
             </div>
             <div class="hero-text">
-                <span class="hero-badge">Data Scientist &middot; Former Intelligence Analyst</span>
-                <h1>I turn complex data into <span class="accent">decisions</span>.</h1>
-                <p class="lead">
+                <span class="hero-badge" data-hero-stage data-delay="100">Data Scientist &middot; Former Intelligence Analyst</span>
+                <h1 data-hero-stage data-delay="200">I turn complex data into <span class="accent">decisions</span>.</h1>
+                <p class="lead" data-hero-stage data-delay="300">
                     Data scientist with 6+ years in military intelligence, where I fused multi-source data,
                     led teams of analysts, and briefed senior leaders under real time pressure. Now I apply
                     the same judgment to data engineering, analysis, and visualization.
@@ -32,8 +32,8 @@
                     Currently completing an Applied Data Science degree at Modul University, Vienna — two
                     Dean's List honors — building and shipping real tools in Python, SQL, and JavaScript.
                 </p>
-                <div class="social-row" data-social></div>
-                <div class="btn-row">
+                <div class="social-row" data-social data-hero-stage data-delay="400"></div>
+                <div class="btn-row" data-hero-stage data-delay="500">
                     <a class="btn btn-primary" href="mailto:mail@spencer-anderson.com">Hire Me</a>
                     <a class="btn btn-outline" href="projects.html">View Projects</a>
                     <a class="btn btn-outline" href="assets/Spencer_Anderson_Resume_Aug_2026.pdf" target="_blank" rel="noopener">Download Résumé</a>
@@ -43,29 +43,29 @@
 
         <section class="container">
             <div class="stats">
-                <div class="stat">
-                    <span class="stat-value">6+</span>
+                <div data-reveal data-delay="0" class="stat">
+                    <span class="stat-value" data-count="6" data-suffix="+">6+</span>
                     <span class="stat-label">Years turning data into decisions</span>
                 </div>
-                <div class="stat">
-                    <span class="stat-value">150+</span>
+                <div data-reveal data-delay="120" class="stat">
+                    <span class="stat-value" data-count="150" data-suffix="+">150+</span>
                     <span class="stat-label">Reports briefed to senior leaders</span>
                 </div>
-                <div class="stat">
-                    <span class="stat-value">10</span>
+                <div data-reveal data-delay="240" class="stat">
+                    <span class="stat-value" data-count="10" data-suffix="">10</span>
                     <span class="stat-label">Analysts led &amp; 14 mentored</span>
                 </div>
-                <div class="stat">
-                    <span class="stat-value">2x</span>
+                <div data-reveal data-delay="360" class="stat">
+                    <span class="stat-value" data-count="2" data-suffix="x">2x</span>
                     <span class="stat-label">Dean's List, Applied Data Science</span>
                 </div>
             </div>
         </section>
 
         <section class="container section">
-            <h2>What I bring</h2>
+            <h2 data-reveal>What I bring</h2>
             <div class="grid grid-3">
-                <div class="card card-hover">
+                <div data-reveal data-delay="0" class="card card-hover">
                     <h3>Data Engineering</h3>
                     <p>
                         Full data lifecycle work: collection, cleaning, normalized database design, and
@@ -73,7 +73,7 @@
                         automated workflows.
                     </p>
                 </div>
-                <div class="card card-hover">
+                <div data-reveal data-delay="140" class="card card-hover">
                     <h3>Analysis &amp; Visualization</h3>
                     <p>
                         Fuse datasets into insight and build visualizations that make complex data
@@ -81,7 +81,7 @@
                         work and formal DIA training.
                     </p>
                 </div>
-                <div class="card card-hover">
+                <div data-reveal data-delay="280" class="card card-hover">
                     <h3>Judgment Under Pressure</h3>
                     <p>
                         Leadership and executive communication honed briefing senior leaders and
@@ -92,10 +92,10 @@
         </section>
 
         <section class="container section">
-            <h2>Selected work</h2>
+            <h2 data-reveal>Selected work</h2>
             <p class="muted">Real projects — data pipelines, dashboards, and analysis. See all of them on the Projects page.</p>
             <div class="grid grid-3">
-                <article class="project-card">
+                <article data-reveal data-delay="0" class="project-card">
                     <div class="thumb">Dashboard</div>
                     <div class="body">
                         <h3>TreeEquity</h3>
@@ -112,7 +112,7 @@
                         <a class="card-link" href="projects/treeequity.html">View case study &rarr;</a>
                     </div>
                 </article>
-                <article class="project-card">
+                <article data-reveal data-delay="150" class="project-card">
                     <div class="thumb">Analysis</div>
                     <div class="body">
                         <h3>Geography-Quiz</h3>
@@ -129,7 +129,7 @@
                         <a class="card-link" href="projects/geo-quiz.html">View case study &rarr;</a>
                     </div>
                 </article>
-                <article class="project-card">
+                <article data-reveal data-delay="300" class="project-card">
                     <div class="thumb">App</div>
                     <div class="body">
                         <h3>DataDine</h3>
@@ -147,7 +147,7 @@
                     </div>
                 </article>
             </div>
-            <div class="btn-row">
+            <div data-reveal class="btn-row">
                 <a class="btn btn-outline" href="projects.html">Browse All Projects</a>
             </div>
         </section>
