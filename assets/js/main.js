@@ -318,102 +318,6 @@
         kick();
     }
 
-    /* ---------- Phase 6: runtime split-text headline reveal ---------- */
-    function splitHeadingChars(el) {
-        var chars = [];
-        var frag = document.createDocumentFragment();
-
-        var walk = function (node, cls) {
-            for (var n = node.firstChild; n; n = n.nextSibling) {
-                if (n.nodeType === 3) {
-                    var text = n.nodeValue;
-                    for (var i = 0; i < text.length; i++) {
-                        var ch = text.charAt(i);
-                        if (/\s/.test(ch)) {
-                            frag.appendChild(document.createTextNode(ch));
-                        } else {
-                            var span = document.createElement('span');
-                            span.className = cls ? 'st-ch ' + cls : 'st-ch';
-                            span.textContent = ch;
-                            frag.appendChild(span);
-                            chars.push(span);
-                        }
-                    }
-                } else if (n.nodeType === 1) {
-                    var childCls = typeof n.className === 'string' ? n.className : '';
-                    walk(n, (cls && childCls) ? cls + ' ' + childCls : (cls || childCls));
-                }
-            }
-        };
-
-        walk(el, '');
-        el.innerHTML = '';
-        el.appendChild(frag);
-        return chars;
-    }
-
-    function initHeadlineReveal(reduced) {
-        var heading = document.querySelector('h1.hero-title') ||
-            document.querySelector('main h1') ||
-            document.querySelector('main h2');
-        if (!heading) return;
-
-        // Keep the exact original markup/text so the heading can be put back untouched
-        var originalHTML = heading.innerHTML;
-        var originalText = heading.textContent;
-        if (!originalText) return;
-
-        var chars = splitHeadingChars(heading);
-        if (reduced || !window.gsap || !chars.length) {
-            heading.innerHTML = originalHTML;
-            if (heading.textContent !== originalText) heading.textContent = originalText;
-            return;
-        }
-
-        var played = false;
-        var play = function () {
-            if (played) return;
-            played = true;
-            gsap.from(chars, {
-                opacity: 0,
-                yPercent: 40,
-                rotateX: -40,
-                duration: 0.7,
-                ease: 'power3.out',
-                stagger: { each: 0.02, from: 'center' }
-            });
-        };
-
-        var hero = heading.closest ? heading.closest('.hero') : null;
-        if (!hero) {
-            // About / Projects headings play on load
-            play();
-            return;
-        }
-
-        var stages = Array.prototype.slice.call(hero.querySelectorAll('[data-hero-stage]'));
-        if (!stages.length) {
-            setTimeout(play, 400);
-            return;
-        }
-
-        // Hero heading waits for the staged entrance window to finish
-        var pending = stages.length;
-        hero.addEventListener('animationend', function (e) {
-            if (!e.target || !e.target.hasAttribute || !e.target.hasAttribute('data-hero-stage')) return;
-            pending -= 1;
-            if (pending <= 0) play();
-        });
-
-        var lastDelay = 0;
-        stages.forEach(function (el) {
-            var delay = parseInt(el.getAttribute('data-delay') || '0', 10);
-            if (!isNaN(delay) && delay > lastDelay) lastDelay = delay;
-        });
-        // Fallback in case animationend never fires (entrance suppressed by CSS)
-        setTimeout(play, lastDelay + 900);
-    }
-
     /* ---------- Phase 6: magnetic cursor follower ---------- */
     function initCursorFollower(reduced) {
         if (reduced || !window.gsap) return;
@@ -644,10 +548,6 @@
             };
             portrait.addEventListener('animationend', onHeroEnd);
         }
-
-        // Split-text reveal for the page's main heading (Phase 6) — runs before the
-        // scramble so both effects operate on the same character spans
-        initHeadlineReveal(reduced);
 
         // Scramble-decode headline (Phase 2) — text returns to its original string
         var GLYPHS = '!<>-_\/[]{}=+*^?#%0123456789';

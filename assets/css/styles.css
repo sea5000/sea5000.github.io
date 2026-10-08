@@ -1088,6 +1088,8 @@ code {
 ::view-transition-new(root) { animation: vt-in .42s ease both; }
 
 /* Phase 6 — split-text characters (spans injected at runtime by JS) */
+</parameter>
+<parameter=old_string>
 .st-ch { display: inline-block; }
 
 /* Phase 6 — magnetic cursor follower (injected by JS, fine pointers only) */
