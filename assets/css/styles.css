@@ -1087,6 +1087,40 @@ code {
 ::view-transition-old(root) { animation: none; }
 ::view-transition-new(root) { animation: vt-in .42s ease both; }
 
+/* Phase 6 — split-text characters (spans injected at runtime by JS) */
+.st-ch { display: inline-block; }
+
+/* Phase 6 — magnetic cursor follower (injected by JS, fine pointers only) */
+.cursor-dot {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+    z-index: 2147483647;
+    will-change: transform;
+    transition: width .2s ease, height .2s ease, opacity .2s ease;
+}
+
+.cursor-dot.is-on { opacity: .8; }
+
+.cursor-dot.is-magnet { width: 14px; height: 14px; }
+
+/* Phase 6 — cross-page transition curtain (injected by JS) */
+.vt-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--surface-0);
+    z-index: 9999;
+    transform: translateY(101%);
+    pointer-events: none;
+}
+
 /* Respect reduced-motion preferences */
 @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }

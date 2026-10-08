@@ -1,6 +1,55 @@
 (function () {
     "use strict";
 
+    /* ---------- Phase 6: cross-page transition overlay ---------- */
+    var vtNextHref = null;
+    try {
+        vtNextHref = window.sessionStorage.getItem('vt-next');
+        window.sessionStorage.removeItem('vt-next');
+    } catch (err) {
+        vtNextHref = null;
+    }
+
+    var vtOverlay = null;
+    if (window.gsap && document.body) {
+        vtOverlay = document.createElement('div');
+        vtOverlay.className = 'vt-overlay';
+        vtOverlay.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(vtOverlay);
+
+        if (vtNextHref) {
+            gsap.fromTo(vtOverlay, { yPercent: 0 }, { yPercent: -101, duration: 0.38, ease: 'power2.inOut' });
+        } else {
+            gsap.set(vtOverlay, { yPercent: 101 });
+        }
+
+        // Wipe in, then navigate — capture phase so the native/View-Transitions path never double-fires
+        document.addEventListener('click', function (e) {
+            if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            var a = e.target && e.target.closest ? e.target.closest('a') : null;
+            if (!a || a.target === '_blank' || a.hasAttribute('download')) return;
+            var raw = a.getAttribute('href') || '';
+            if (!raw || raw.charAt(0) === '#') return;
+            if (/^(mailto|tel|javascript):/i.test(raw)) return;
+            var href = a.href;
+            if (!href || href.indexOf(window.location.origin + '/') !== 0) return;
+            if (!/\.html?$/i.test(href.split('#')[0].split('?')[0])) return;
+            try {
+                window.sessionStorage.setItem('vt-next', href);
+            } catch (err2) {
+                return;
+            }
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            gsap.to(vtOverlay, {
+                yPercent: 0,
+                duration: 0.38,
+                ease: 'power2.inOut',
+                onComplete: function () { window.location.href = href; }
+            });
+        }, true);
+    }
+
     var SOCIAL = {
         github: "https://github.com/sea5000",
         linkedin: "https://www.linkedin.com/in/se-anderson/",
@@ -269,6 +318,159 @@
         kick();
     }
 
+    /* ---------- Phase 6: runtime split-text headline reveal ---------- */
+    function splitHeadingChars(el) {
+        var chars = [];
+        var frag = document.createDocumentFragment();
+
+        var walk = function (node, cls) {
+            for (var n = node.firstChild; n; n = n.nextSibling) {
+                if (n.nodeType === 3) {
+                    var text = n.nodeValue;
+                    for (var i = 0; i < text.length; i++) {
+                        var ch = text.charAt(i);
+                        if (/\s/.test(ch)) {
+                            frag.appendChild(document.createTextNode(ch));
+                        } else {
+                            var span = document.createElement('span');
+                            span.className = cls ? 'st-ch ' + cls : 'st-ch';
+                            span.textContent = ch;
+                            frag.appendChild(span);
+                            chars.push(span);
+                        }
+                    }
+                } else if (n.nodeType === 1) {
+                    var childCls = typeof n.className === 'string' ? n.className : '';
+                    walk(n, (cls && childCls) ? cls + ' ' + childCls : (cls || childCls));
+                }
+            }
+        };
+
+        walk(el, '');
+        el.innerHTML = '';
+        el.appendChild(frag);
+        return chars;
+    }
+
+    function initHeadlineReveal(reduced) {
+        var heading = document.querySelector('h1.hero-title') ||
+            document.querySelector('main h1') ||
+            document.querySelector('main h2');
+        if (!heading) return;
+
+        // Keep the exact original markup/text so the heading can be put back untouched
+        var originalHTML = heading.innerHTML;
+        var originalText = heading.textContent;
+        if (!originalText) return;
+
+        var chars = splitHeadingChars(heading);
+        if (reduced || !window.gsap || !chars.length) {
+            heading.innerHTML = originalHTML;
+            if (heading.textContent !== originalText) heading.textContent = originalText;
+            return;
+        }
+
+        var played = false;
+        var play = function () {
+            if (played) return;
+            played = true;
+            gsap.from(chars, {
+                opacity: 0,
+                yPercent: 40,
+                rotateX: -40,
+                duration: 0.7,
+                ease: 'power3.out',
+                stagger: { each: 0.02, from: 'center' }
+            });
+        };
+
+        var hero = heading.closest ? heading.closest('.hero') : null;
+        if (!hero) {
+            // About / Projects headings play on load
+            play();
+            return;
+        }
+
+        var stages = Array.prototype.slice.call(hero.querySelectorAll('[data-hero-stage]'));
+        if (!stages.length) {
+            setTimeout(play, 400);
+            return;
+        }
+
+        // Hero heading waits for the staged entrance window to finish
+        var pending = stages.length;
+        hero.addEventListener('animationend', function (e) {
+            if (!e.target || !e.target.hasAttribute || !e.target.hasAttribute('data-hero-stage')) return;
+            pending -= 1;
+            if (pending <= 0) play();
+        });
+
+        var lastDelay = 0;
+        stages.forEach(function (el) {
+            var delay = parseInt(el.getAttribute('data-delay') || '0', 10);
+            if (!isNaN(delay) && delay > lastDelay) lastDelay = delay;
+        });
+        // Fallback in case animationend never fires (entrance suppressed by CSS)
+        setTimeout(play, lastDelay + 900);
+    }
+
+    /* ---------- Phase 6: magnetic cursor follower ---------- */
+    function initCursorFollower(reduced) {
+        if (reduced || !window.gsap) return;
+        if (!window.matchMedia || !window.matchMedia('(pointer: fine)').matches) return;
+
+        var dot = document.createElement('div');
+        dot.className = 'cursor-dot';
+        dot.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(dot);
+
+        gsap.set(dot, { xPercent: -50, yPercent: -50 });
+        var xTo = gsap.quickTo(dot, 'x', { duration: 0.18, ease: 'power3.out' });
+        var yTo = gsap.quickTo(dot, 'y', { duration: 0.18, ease: 'power3.out' });
+
+        var px = -100, py = -100, magnet = null;
+
+        var move = function () {
+            var tx = px, ty = py;
+            if (magnet) {
+                var r = magnet.getBoundingClientRect();
+                tx = px + ((r.left + r.width / 2) - px) * 0.22;
+                ty = py + ((r.top + r.height / 2) - py) * 0.22;
+            }
+            xTo(tx);
+            yTo(ty);
+        };
+        var show = function () { dot.classList.add('is-on'); };
+        var hide = function () { dot.classList.remove('is-on'); };
+
+        window.addEventListener('pointermove', function (e) {
+            px = e.clientX;
+            py = e.clientY;
+            show();
+            move();
+        }, { passive: true });
+
+        window.addEventListener('pointerleave', hide);
+        // pointerleave does not bubble off window in every engine — also catch the real window exit
+        window.addEventListener('pointerout', function (e) {
+            if (!e.relatedTarget) hide();
+        });
+
+        var magnets = document.querySelectorAll('a, button, [data-tilt]');
+        Array.prototype.forEach.call(magnets, function (el) {
+            el.addEventListener('pointerenter', function () {
+                magnet = el;
+                dot.classList.add('is-magnet');
+                move();
+            });
+            el.addEventListener('pointerleave', function () {
+                if (magnet === el) magnet = null;
+                dot.classList.remove('is-magnet');
+                move();
+            });
+        });
+    }
+
     function initMotion() {
         var d = document;
         var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -443,6 +645,10 @@
             portrait.addEventListener('animationend', onHeroEnd);
         }
 
+        // Split-text reveal for the page's main heading (Phase 6) — runs before the
+        // scramble so both effects operate on the same character spans
+        initHeadlineReveal(reduced);
+
         // Scramble-decode headline (Phase 2) — text returns to its original string
         var GLYPHS = '!<>-_\/[]{}=+*^?#%0123456789';
         function scramble(el) {
@@ -513,6 +719,9 @@
                 });
             });
         }
+
+        // Magnetic cursor follower (Phase 6; fine pointers only, after tilt marks data-tilt)
+        initCursorFollower(reduced);
 
         // Scroll progress bar
         var bar = d.createElement('div');
