@@ -965,6 +965,30 @@ code {
     50%       { opacity: .38; }
 }
 
+/* Tilt cards (elements with data-tilt; JS sets --tx/--ty/--mx/--my) */
+.card[data-tilt],
+.exp-card[data-tilt] {
+    position: relative;
+    transform: perspective(900px) rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg)) translateY(var(--lift, 0px));
+    transition: transform .18s var(--ease-out);
+    transform-style: preserve-3d;
+}
+.card[data-tilt]:hover,
+.exp-card[data-tilt]:hover { --lift: -4px; }
+.card[data-tilt]::after,
+.exp-card[data-tilt]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 50%), rgba(94,177,197,.10), transparent 60%);
+    opacity: 0;
+    transition: opacity .25s;
+    pointer-events: none;
+}
+.card[data-tilt]:hover::after,
+.exp-card[data-tilt]:hover::after { opacity: 1; }
+
 /* Scroll reveal (elements marked with data-reveal) */
 .js [data-reveal] {
     opacity: 0;
@@ -1049,5 +1073,6 @@ code {
     .portrait.float-able img { animation: none !important; }
     .portrait.float-able::after { display: none !important; }
     .back-to-top, .card-hover, .project-card, .exp-card, .social-icon { transition: none !important; }
+    .card[data-tilt], .exp-card[data-tilt] { transform: none !important; }
     .nav-links a::after { transition: none !important; }
 }

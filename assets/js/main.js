@@ -391,6 +391,34 @@
         var h1 = d.querySelector('.hero h1');
         if (h1) scramble(h1);
 
+        // Tilt cards with cursor sheen (Phase 3; hover-capable pointers only)
+        var canHover = window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches;
+        if (!reduced && canHover) {
+            d.querySelectorAll('.card, .exp-card').forEach(function (card) {
+                var raf = 0;
+                var mx = 50, my = 50;
+                card.setAttribute('data-tilt', '');
+                card.addEventListener('pointermove', function (e) {
+                    var r = card.getBoundingClientRect();
+                    mx = ((e.clientX - r.left) / r.width) * 100;
+                    my = ((e.clientY - r.top) / r.height) * 100;
+                    var px = (e.clientX - r.left) / r.width - .5;
+                    var py = (e.clientY - r.top) / r.height - .5;
+                    if (!raf) raf = requestAnimationFrame(function () {
+                        card.style.setProperty('--mx', mx + '%');
+                        card.style.setProperty('--my', my + '%');
+                        card.style.setProperty('--tx', (py * -6).toFixed(2) + 'deg');
+                        card.style.setProperty('--ty', (px * 6).toFixed(2) + 'deg');
+                        raf = 0;
+                    });
+                });
+                card.addEventListener('pointerout', function () {
+                    card.style.setProperty('--tx', '0deg');
+                    card.style.setProperty('--ty', '0deg');
+                });
+            });
+        }
+
         // Scroll progress bar
         var bar = d.createElement('div');
         bar.className = 'scroll-progress';
