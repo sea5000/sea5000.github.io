@@ -296,24 +296,30 @@
         };
 
         var countUps = $$('[data-count]').map(function (el) {
+            // Match the original number's decimal places (e.g. data-count="6" -> 0 dp)
+            var raw = String(el.getAttribute('data-count'));
+            var dots = raw.split('.');
+            var decimals = dots.length > 1 ? Math.min(dots[1].replace(/[^0-9]/g, '').length, 6) : 0;
             return {
                 el: el,
-                target: parseFloat(el.getAttribute('data-count')),
+                target: parseFloat(raw),
                 suffix: el.getAttribute('data-suffix') || '',
                 go: function () {
                     if (el.dataset.done) return;
                     el.dataset.done = '1';
-                    if (reduced || typeof el.animate !== 'function' || !el.animate) {
-                        el.textContent = fmt(this.target) + this.suffix;
+                    var self = this;
+                    if (reduced) {
+                        self.el.textContent = fmt(self.target) + self.suffix;
                         return;
                     }
-                    var self = this;
                     var t0 = performance.now();
                     var dur = 1500;
                     var ease = function (t) { return 1 - Math.pow(1 - t, 3); };
                     var step = function (now) {
                         var t = Math.min(1, (now - t0) / dur);
-                        self.el.textContent = fmt(self.target * ease(t)) + self.suffix;
+                        var val = self.target * ease(t);
+                        // keep to the target's own decimal places (0 here), strip trailing dots
+                        self.el.textContent = fmt(decimals === 0 ? Math.round(val) : +val.toFixed(decimals)) + self.suffix;
                         if (t < 1) requestAnimationFrame(step);
                     };
                     requestAnimationFrame(step);
