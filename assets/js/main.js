@@ -359,6 +359,7 @@
             var onHeroEnd = function (e) {
                 if (e.animationName === 'hero-rise') {
                     portrait.classList.remove('hero-in');
+                    portrait.classList.add('hero-done');
                     portrait.removeEventListener('animationend', onHeroEnd);
                 }
             };

@@ -1034,6 +1034,8 @@ code {
     to   { opacity: 1;  transform: none; }
 }
 
+.js .hero [data-hero-stage].hero-done { opacity: 1 !important; }
+
 /* Scroll progress bar (injected by JS) */
 .scroll-progress {
     position: fixed;
