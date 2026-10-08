@@ -274,6 +274,12 @@
         var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         d.documentElement.classList.add('js');
 
+        // Phase 5: GSAP present → take over reveal; CSS reveal rules opt out via .gsap-ok
+        if (window.gsap && window.ScrollTrigger) {
+            gsap.registerPlugin(ScrollTrigger);
+            document.documentElement.classList.add('gsap-ok');
+        }
+
         var $$ = function (sel) { return Array.prototype.slice.call(d.querySelectorAll(sel)); };
 
         // Hero entrance (staged)
@@ -330,24 +336,95 @@
         // Scroll reveal
         var revealEls = $$('[data-reveal]');
         var show = function (el) { el.classList.add('is-revealed'); };
-        if (revealEls.length && 'IntersectionObserver' in window && !reduced) {
-            var io = new IntersectionObserver(function (entries) {
-                entries.forEach(function (entry) {
-                    if (!entry.isIntersecting) return;
-                    var el = entry.target;
-                    show(el);
-                    el.querySelectorAll('[data-reveal]').forEach(show);
-                    countUps.forEach(function (cu) {
-                        if (cu.el === el || el.contains(cu.el)) cu.go();
-                    });
-                    io.unobserve(el);
-                });
-            }, { rootMargin: '0px 0px -8% 0px', threshold: 0 });
-            revealEls.forEach(function (el) { io.observe(el); });
-        } else {
+        var startCountersFor = function (el) {
+            countUps.forEach(function (cu) {
+                if (cu.el === el || el.contains(cu.el)) {
+                    try { cu.go(); } catch (err) { /* leave the counter as-is */ }
+                }
+            });
+        };
+
+        if (reduced || (window.gsap && !window.ScrollTrigger)) {
+            // Reduced motion (skip GSAP reveal) or partial CDN: immediate render,
+            // count-ups land on their final formatted value
             revealEls.forEach(show);
             countUps.forEach(function (cu) { cu.go(); });
+        } else if (!window.gsap) {
+            // Phase 5 guard: no GSAP (CDN outage) → original IntersectionObserver reveal
+            if (revealEls.length && 'IntersectionObserver' in window && !reduced) {
+                var io = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (!entry.isIntersecting) return;
+                        var el = entry.target;
+                        show(el);
+                        el.querySelectorAll('[data-reveal]').forEach(show);
+                        countUps.forEach(function (cu) {
+                            if (cu.el === el || el.contains(cu.el)) cu.go();
+                        });
+                        io.unobserve(el);
+                    });
+                }, { rootMargin: '0px 0px -8% 0px', threshold: 0 });
+                revealEls.forEach(function (el) { io.observe(el); });
+            } else {
+                revealEls.forEach(show);
+                countUps.forEach(function (cu) { cu.go(); });
+            }
+        } else {
+            // Phase 5: GSAP + ScrollTrigger reveal
+            var viewH = window.innerHeight || d.documentElement.clientHeight;
+            revealEls.forEach(function (el) {
+                gsap.from(el, {
+                    opacity: 0,
+                    y: 28,
+                    duration: 0.7,
+                    ease: 'power2.out',
+                    scrollTrigger: {
+                        trigger: el,
+                        start: 'top 88%',
+                        once: true,
+                        onEnter: function () { startCountersFor(el); }
+                    }
+                });
+                // Already in view on load → start related counters right away
+                var r = el.getBoundingClientRect();
+                if (r.top < viewH * 0.88 && r.bottom > 0) startCountersFor(el);
+            });
         }
+
+        /* ---------- Phase 5: Lenis smooth scroll ---------- */
+        var lenis = null;
+        var coarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+        if (window.Lenis && !reduced && !coarsePointer) {
+            lenis = new window.Lenis({ lerp: 0.09, smoothWheel: true });
+            var lenisRaf = 0;
+            var lenisLoop = function (t) {
+                lenis.raf(t);
+                lenisRaf = requestAnimationFrame(lenisLoop);
+            };
+            lenisRaf = requestAnimationFrame(lenisLoop);
+            window.addEventListener('pagehide', function () {
+                if (lenisRaf) {
+                    cancelAnimationFrame(lenisRaf);
+                    lenisRaf = 0;
+                }
+            });
+        }
+
+        // Header nav links: smooth-scroll to the link's own hash target when it has one
+        $$('.site-header a').forEach(function (a) {
+            a.addEventListener('click', function (e) {
+                var href = a.getAttribute('href') || '';
+                if (href.charAt(0) !== '#') return;
+                var target = document.querySelector(href);
+                if (!target) return;
+                e.preventDefault();
+                if (lenis) {
+                    lenis.scrollTo(target, { offset: -16 });
+                } else {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
 
         // Hero particle field + floating portrait (Phase 2)
         initHeroField(reduced);
