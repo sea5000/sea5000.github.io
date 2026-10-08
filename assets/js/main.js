@@ -352,7 +352,18 @@
         // Hero particle field + floating portrait (Phase 2)
         initHeroField(reduced);
         var portrait = d.querySelector('.hero .portrait');
-        if (portrait && !reduced) portrait.classList.add('float-able');
+        if (portrait && !reduced) {
+            portrait.classList.add('float-able');
+            // The hero entrance animation (hero-rise) holds the cascade with a `both` fill,
+            // which would block the float. When it finishes, drop hero-in so float takes over.
+            var onHeroEnd = function (e) {
+                if (e.animationName === 'hero-rise') {
+                    portrait.classList.remove('hero-in');
+                    portrait.removeEventListener('animationend', onHeroEnd);
+                }
+            };
+            portrait.addEventListener('animationend', onHeroEnd);
+        }
 
         // Scramble-decode headline (Phase 2) — text returns to its original string
         var GLYPHS = '!<>-_\/[]{}=+*^?#%0123456789';
