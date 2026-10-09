@@ -375,6 +375,66 @@
         });
     }
 
+    /* ---------- Phase 7: Lottie micro-animation on the primary CTA ---------- */
+    function initLottie(reduced) {
+        if (reduced || !window.lottie) return;
+
+        var primaries = document.querySelectorAll('a.btn-primary');
+        var hire = null;
+        for (var i = 0; i < primaries.length; i++) {
+            if (/hire me/i.test(primaries[i].textContent)) { hire = primaries[i]; break; }
+        }
+        if (!hire) return;
+
+        var slot = document.createElement('span');
+        slot.className = 'lottie-mini';
+        slot.setAttribute('aria-hidden', 'true');
+        hire.insertBefore(slot, hire.firstChild);
+
+        var pulse = {
+            v: '5.12.2', fr: 60, ip: 0, op: 30, w: 100, h: 100,
+            nm: 'pulse', ddd: 0, assets: [],
+            layers: [{
+                ddd: 0, ind: 1, ty: 4, nm: 'dot', sr: 1,
+                ks: {
+                    o: { a: 0, k: 100 },
+                    r: { a: 0, k: 0 },
+                    p: { a: 0, k: [50, 50, 0] },
+                    a: { a: 0, k: [0, 0, 0] },
+                    s: {
+                        a: 1,
+                        k: [
+                            { t: 0, s: [55, 55, 100], i: { x: [0.42], y: [1] }, o: { x: [0.58], y: [0] } },
+                            { t: 30, s: [100, 100, 100] }
+                        ]
+                    }
+                },
+                ao: 0,
+                shapes: [{
+                    ty: 'gr', nm: 'g',
+                    it: [
+                        { ty: 'el', d: 1, s: { a: 0, k: [64, 64] }, p: { a: 0, k: [0, 0] }, nm: 'e' },
+                        { ty: 'st', c: { a: 0, k: [1, 1, 1, 1] }, o: { a: 0, k: 100 }, w: { a: 0, k: 14 }, lc: 2, lj: 1, nm: 's' },
+                        { ty: 'tr', p: { a: 0, k: [0, 0] }, a: { a: 0, k: [0, 0] }, s: { a: 0, k: [100, 100] }, r: { a: 0, k: 0 }, o: { a: 0, k: 100 }, sk: { a: 0, k: 0 }, sa: { a: 0, k: 0 }, nm: 'tr' }
+                    ]
+                }],
+                ip: 0, op: 30, st: 0, bm: 0
+            }]
+        };
+
+        try {
+            window.lottie.loadAnimation({
+                container: slot,
+                renderer: 'svg',
+                loop: true,
+                autoplay: true,
+                animationData: pulse
+            });
+        } catch (err) {
+            slot.remove();
+        }
+    }
+
     function initMotion() {
         var d = document;
         var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -495,6 +555,28 @@
                 var r = el.getBoundingClientRect();
                 if (r.top < viewH * 0.88 && r.bottom > 0) startCountersFor(el);
             });
+        }
+
+        // Phase 7: SVG line-draw accent under the "What I bring" heading
+        var lineDraw = d.querySelector('.line-draw');
+        if (lineDraw) {
+            var ldPath = lineDraw.querySelector('.ld-path');
+            if (reduced) {
+                if (ldPath) ldPath.style.strokeDashoffset = '0';
+            } else if (window.gsap && window.ScrollTrigger && ldPath) {
+                gsap.to(ldPath, {
+                    strokeDashoffset: 0,
+                    duration: 1.1,
+                    ease: 'power2.out',
+                    scrollTrigger: {
+                        trigger: lineDraw.previousElementSibling || lineDraw,
+                        start: 'top 88%',
+                        once: true
+                    }
+                });
+            } else {
+                lineDraw.classList.add('ld-draw');
+            }
         }
 
         /* ---------- Phase 5: Lenis smooth scroll ---------- */
@@ -622,6 +704,9 @@
 
         // Magnetic cursor follower (Phase 6; fine pointers only, after tilt marks data-tilt)
         initCursorFollower(reduced);
+
+        // Lottie micro-animation on the primary CTA (Phase 7; skipped without CDN or with reduced motion)
+        initLottie(reduced);
 
         // Scroll progress bar
         var bar = d.createElement('div');
