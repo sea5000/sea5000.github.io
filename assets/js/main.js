@@ -329,8 +329,8 @@
         document.body.appendChild(dot);
 
         gsap.set(dot, { xPercent: -50, yPercent: -50 });
-        var xTo = gsap.quickTo(dot, 'x', { duration: 0.18, ease: 'power3.out' });
-        var yTo = gsap.quickTo(dot, 'y', { duration: 0.18, ease: 'power3.out' });
+        var xTo = gsap.quickTo(dot, 'x', { duration: 0.12, ease: 'power3.out' });
+        var yTo = gsap.quickTo(dot, 'y', { duration: 0.12, ease: 'power3.out' });
 
         var px = -100, py = -100, magnet = null;
 
@@ -422,8 +422,9 @@
             }]
         };
 
+        var anim;
         try {
-            window.lottie.loadAnimation({
+            anim = window.lottie.loadAnimation({
                 container: slot,
                 renderer: 'svg',
                 loop: true,
@@ -432,7 +433,62 @@
             });
         } catch (err) {
             slot.remove();
+            return;
         }
+        if (!anim) return;
+        try {
+            anim.setSpeed(0.5);
+        } catch (err) {}
+
+        // Proximity-reactive speed on a single rAF: 0.5 (base) far away, easing up to 2.0 at the
+        // button center inside a 240px radius. Outside the radius it eases back to 0.5 (~0.6s).
+        var BASE_SPEED = 0.5;
+        var MAX_SPEED = 2.0;
+        var PROX_RADIUS = 240;
+        var targetSpeed = BASE_SPEED;
+        var currentSpeed = BASE_SPEED;
+        var speedRaf = 0;
+        var lerpSpeed = function () {
+            speedRaf = 0;
+            var diff = targetSpeed - currentSpeed;
+            if (Math.abs(diff) < 0.005) {
+                currentSpeed = targetSpeed;
+            } else {
+                currentSpeed += diff * (diff > 0 ? 0.12 : 0.08);
+            }
+            try {
+                anim.setSpeed(currentSpeed);
+            } catch (err) {}
+            if (Math.abs(targetSpeed - currentSpeed) > 0.005) {
+                speedRaf = requestAnimationFrame(lerpSpeed);
+            }
+        };
+        window.addEventListener('pointermove', function (e) {
+            var r = hire.getBoundingClientRect();
+            var cx = r.left + r.width / 2;
+            var cy = r.top + r.height / 2;
+            var dx = e.clientX - cx;
+            var dy = e.clientY - cy;
+            var dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist <= PROX_RADIUS) {
+                targetSpeed = BASE_SPEED + (1 - dist / PROX_RADIUS) * (MAX_SPEED - BASE_SPEED);
+            } else {
+                targetSpeed = BASE_SPEED;
+            }
+            if (!speedRaf && !document.hidden) {
+                speedRaf = requestAnimationFrame(lerpSpeed);
+            }
+        }, { passive: true });
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) {
+                if (speedRaf) {
+                    cancelAnimationFrame(speedRaf);
+                    speedRaf = 0;
+                }
+            } else if (Math.abs(targetSpeed - currentSpeed) > 0.005 && !speedRaf) {
+                speedRaf = requestAnimationFrame(lerpSpeed);
+            }
+        });
     }
 
 
@@ -664,25 +720,55 @@
             });
         }
 
+        // Safety net: if neither IO nor GSAP/ScrollTrigger fires, never leave content invisible.
+        // One-shot fallback — any [data-reveal] still hidden is force-shown. This does not touch the
+        // normal IO/GSAP reveal path (under .gsap-ok the class has no CSS effect; GSAP inline styles
+        // still drive the scroll reveal), so below-the-fold GSAP reveals are unaffected.
+        setTimeout(function () {
+            var stuck = d.querySelectorAll('[data-reveal]:not(.is-revealed)');
+            for (var si = 0; si < stuck.length; si++) {
+                stuck[si].classList.add('is-revealed');
+            }
+        }, 1500);
+
         // Phase 7: SVG line-draw accent under the "What I bring" heading
+        // GSAP+ScrollTrigger → scrubbed, bidirectional draw (replays forwards AND backwards on scroll).
+        // Fallback (no GSAP/ScrollTrigger, or reduced motion) → one-shot CSS class, fired only on the
+        // element's first intersection. The ld-draw class-based one-shot is never fired while GSAP runs.
         var lineDraw = d.querySelector('.line-draw');
         if (lineDraw) {
             var ldPath = lineDraw.querySelector('.ld-path');
-            if (reduced) {
-                if (ldPath) ldPath.style.strokeDashoffset = '0';
-            } else if (window.gsap && window.ScrollTrigger && ldPath) {
+            var ldTrigger = lineDraw.previousElementSibling || lineDraw;
+            if (ldPath && window.gsap && window.ScrollTrigger) {
+                ldPath.style.transition = 'none';
                 gsap.to(ldPath, {
                     strokeDashoffset: 0,
-                    duration: 1.1,
-                    ease: 'power2.out',
                     scrollTrigger: {
-                        trigger: lineDraw.previousElementSibling || lineDraw,
-                        start: 'top 88%',
-                        once: true
+                        trigger: ldTrigger,
+                        start: 'top 80%',
+                        end: 'bottom 55%',
+                        scrub: 0.6
                     }
                 });
             } else {
-                lineDraw.classList.add('ld-draw');
+                var ldDrawn = false;
+                var drawLine = function () {
+                    if (ldDrawn) return;
+                    ldDrawn = true;
+                    lineDraw.classList.add('ld-draw');
+                };
+                if ('IntersectionObserver' in window) {
+                    var ldIO = new IntersectionObserver(function (entries) {
+                        entries.forEach(function (entry) {
+                            if (!entry.isIntersecting) return;
+                            drawLine();
+                            ldIO.unobserve(entry.target);
+                        });
+                    }, { rootMargin: '0px 0px -8% 0px' });
+                    ldIO.observe(lineDraw);
+                } else {
+                    drawLine();
+                }
             }
         }
 
