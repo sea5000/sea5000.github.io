@@ -435,7 +435,114 @@
         }
     }
 
-    function initMotion() {
+
+    /* ---------- Phase 8: animated shader background behind hero (Three.js) ---------- */
+    function initHeroShader(reduced) {
+        if (!document.querySelector('.hero')) return;
+        var canvas = document.getElementById('hero-shader');
+        if (!canvas) return;
+        if (typeof window.THREE === 'undefined') return;
+        if (reduced) {
+            try {
+                canvas.remove();
+            } catch (err) {}
+            return;
+        }
+        var hero = document.querySelector('.hero');
+        if (!hero) return;
+        var renderer, scene, camera, material, mesh;
+        var uniforms, rafId = 0, running = false, visible = true;
+        var resizeTimer = null;
+        var ro, wh = { w: 0, h: 0 };
+        function computeColor() {
+            try {
+                var cs = window.getComputedStyle(document.documentElement);
+                var c = cs.getPropertyValue('--color-primary').trim();
+                if (c) return c;
+            } catch (err) {}
+            return '#3b82f6';
+        }
+        function getAccent() {
+            var c = computeColor();
+            if (/^#[0-9a-fA-F]{6}$/.test(c)) return c;
+            return c;
+        }
+        try {
+            var accent = getAccent();
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: false });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+            renderer.setClearColor(0x000000, 0);
+            scene = new THREE.Scene();
+            var w = window.innerWidth, h = window.innerHeight;
+            camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+            var geo = new THREE.PlaneGeometry(2, 2);
+            uniforms = {
+                time: { value: 0 },
+                resolution: { value: new THREE.Vector2(w, h) },
+                aspect: { value: w / h },
+                accent: { value: new THREE.Color(accent) }
+            };
+            material = new THREE.ShaderMaterial({
+                uniforms: uniforms,
+                vertexShader: 'varying vec2 vUv;\nvoid main(){\nvUv = uv;\ngl_Position = vec4(position, 1.0);\n}',
+                fragmentShader: 'uniform float time;\nuniform vec2 resolution;\nuniform float aspect;\nuniform vec3 accent;\nvarying vec2 vUv;\nvoid main(){\nfloat t = time * 0.12;\nvec2 p = vUv - 0.5;\np.x *= aspect;\nfloat f = sin(p.x*1.2 + t) * 0.18 + sin(p.y*1.6 - t*0.8) * 0.14 + sin((p.x+p.y)*0.9 + t*0.5)*0.16;\nvec3 base = vec3(0.06, 0.08, 0.12);\nvec3 col = mix(base, accent, 0.25 + f*0.6);\ncol = mix(col, base*0.8, 0.35);\ngl_FragColor = vec4(col, 0.55);\n}'
+            });
+            mesh = new THREE.Mesh(geo, material);
+            scene.add(mesh);
+            function resize() {
+                var rect = hero.getBoundingClientRect();
+                var rw = Math.max(1, rect.width);
+                var rh = Math.max(1, rect.height);
+                wh.w = rw; wh.h = rh;
+                renderer.setSize(rw, rh, false);
+                uniforms.resolution.value.set(rw, rh);
+                uniforms.aspect.value = rw / Math.max(1, rh);
+            }
+            resize();
+            window.addEventListener('resize', function () {
+                if (resizeTimer) clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(resize, 150);
+            }, { passive: true });
+            ro = typeof ResizeObserver === 'function' ? new ResizeObserver(resize) : null;
+            if (ro) ro.observe(hero);
+            function step(ts) {
+                if (!running) return;
+                uniforms.time.value = ts * 0.001;
+                renderer.render(scene, camera);
+                rafId = requestAnimationFrame(step);
+            }
+            function start() {
+                if (running) return;
+                running = true;
+                rafId = requestAnimationFrame(step);
+            }
+            function stop() {
+                if (!running) return;
+                running = false;
+                if (rafId) {
+                    cancelAnimationFrame(rafId);
+                    rafId = 0;
+                }
+            }
+            if ('IntersectionObserver' in window) {
+                new IntersectionObserver(function (entries) {
+                    var now = entries[0] ? entries[0].isIntersecting : true;
+                    if (now === visible) return;
+                    visible = now;
+                    if (visible) start();
+                    else stop();
+                }).observe(hero);
+            }
+            start();
+        } catch (err) {
+            try {
+                var c = document.getElementById('hero-shader');
+                if (c) c.remove();
+            } catch (e) {}
+        }
+    }
+
+        function initMotion() {
         var d = document;
         var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         d.documentElement.classList.add('js');
@@ -616,6 +723,7 @@
 
         // Hero particle field + floating portrait (Phase 2)
         initHeroField(reduced);
+        initHeroShader(reduced);
         var portrait = d.querySelector('.hero .portrait');
         if (portrait && !reduced) {
             portrait.classList.add('float-able');
