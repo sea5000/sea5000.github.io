@@ -777,12 +777,23 @@
         var coarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
         if (window.Lenis && !reduced && !coarsePointer) {
             lenis = new window.Lenis({ lerp: 0.09, smoothWheel: true });
+            // Lenis drives the scroll itself, so native window scroll events never fire.
+            // Bridge every Lenis scroll frame to ScrollTrigger so its triggers actually evaluate.
+            if (window.gsap && window.ScrollTrigger) {
+                lenis.on('scroll', ScrollTrigger.update);
+            }
             var lenisRaf = 0;
             var lenisLoop = function (t) {
                 lenis.raf(t);
                 lenisRaf = requestAnimationFrame(lenisLoop);
             };
             lenisRaf = requestAnimationFrame(lenisLoop);
+            if (window.gsap && window.ScrollTrigger) {
+                ScrollTrigger.update();
+                window.addEventListener('resize', function () {
+                    ScrollTrigger.update();
+                });
+            }
             window.addEventListener('pagehide', function () {
                 if (lenisRaf) {
                     cancelAnimationFrame(lenisRaf);

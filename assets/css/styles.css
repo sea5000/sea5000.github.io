@@ -1022,6 +1022,12 @@ code {
     transform: none;
 }
 
+/* Safety net: .is-revealed must win even over GSAP's inline opacity:0/transform */
+[data-reveal].is-revealed {
+    opacity:1 !important;
+    transform:none !important;
+}
+
 /* Hero entrance — elements marked with data-hero-stage */
 .js .hero [data-hero-stage] { opacity: 0; }
 
