@@ -429,6 +429,7 @@
                 renderer: 'svg',
                 loop: true,
                 autoplay: true,
+                animationSpeed: 0.4,
                 animationData: pulse
             });
         } catch (err) {
@@ -437,13 +438,13 @@
         }
         if (!anim) return;
         try {
-            anim.setSpeed(0.5);
+            anim.setSpeed(0.4);
         } catch (err) {}
 
-        // Proximity-reactive speed on a single rAF: 0.5 (base) far away, easing up to 2.0 at the
-        // button center inside a 240px radius. Outside the radius it eases back to 0.5 (~0.6s).
-        var BASE_SPEED = 0.5;
-        var MAX_SPEED = 2.0;
+        // Proximity-reactive speed on a single rAF: 1.2 (base) far away, easing up to a 2.5 cap at
+        // the button center inside a 240px radius. Outside the radius it eases back to 1.2 (~0.6s).
+        var BASE_SPEED = 0.4;
+        var MAX_SPEED = 0.9;
         var PROX_RADIUS = 240;
         var targetSpeed = BASE_SPEED;
         var currentSpeed = BASE_SPEED;
@@ -471,7 +472,7 @@
             var dy = e.clientY - cy;
             var dist = Math.sqrt(dx * dx + dy * dy);
             if (dist <= PROX_RADIUS) {
-                targetSpeed = BASE_SPEED + (1 - dist / PROX_RADIUS) * (MAX_SPEED - BASE_SPEED);
+                targetSpeed = Math.min(2.5, BASE_SPEED + (1 - dist / PROX_RADIUS) * (MAX_SPEED - BASE_SPEED));
             } else {
                 targetSpeed = BASE_SPEED;
             }
@@ -527,7 +528,7 @@
             var accent = getAccent();
             renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: false });
             renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-            renderer.setClearColor(0x000000, 0);
+            renderer.setClearColor(0x0A1622, 1);
             scene = new THREE.Scene();
             var w = window.innerWidth, h = window.innerHeight;
             camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -781,6 +782,11 @@
             // Bridge every Lenis scroll frame to ScrollTrigger so its triggers actually evaluate.
             if (window.gsap && window.ScrollTrigger) {
                 lenis.on('scroll', ScrollTrigger.update);
+                ScrollTrigger.scrollerProxy(document.body, {
+                    getBoundingClientRect: function () { return { top: 0, left: 0, right: window.innerWidth, bottom: window.innerHeight, height: window.innerHeight, width: window.innerWidth }; },
+                    scrollTop: function () { return lenis ? lenis.scroll : 0; },
+                    setScrollTop: function (v) { if (lenis) { lenis.scrollTo(v); } }
+                });
             }
             var lenisRaf = 0;
             var lenisLoop = function (t) {
