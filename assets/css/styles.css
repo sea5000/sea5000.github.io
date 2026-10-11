@@ -15,6 +15,13 @@
     --ink-keppel: color-mix(in srgb, var(--keppel) 45%, black);
     --ink-sea:    color-mix(in srgb, var(--medium-sea-green) 40%, black);
 
+    /* Hero surface + paint colors (JS reads these for the shader + 2D nodes) */
+    --hero-base:   #D8E8F1;
+    --hero-accent: #14384F;
+    --canvas-line: 46,98,132;
+    --canvas-node: 34,88,118;
+    --canvas-cursor: 24,120,158;
+
     --accent:       var(--ink-keppel);
     --accent-soft:  var(--keppel);
 
@@ -53,6 +60,66 @@
 }
 
 * { box-sizing: border-box; }
+
+/* ---------- Theme system ----------
+   Default (no attribute) = light theme. [data-theme="dark"] overrides the
+   semantic tokens defined above. Every rule in the site reads from these
+   tokens, so flipping the attribute on <html> re-themes the whole site. */
+[data-theme="dark"] {
+    --surface-0:      #0B1520;
+    --surface-1:      #101D2B;
+    --surface-2:      rgba(122, 214, 199, 0.12);
+    --surface-3:      rgba(122, 214, 199, 0.14);
+    --surface-4:      rgba(122, 214, 199, 0.20);
+
+    --accent:         #48D6B6;
+    --accent-soft:    #48D6B6;
+
+    --ink-steel:  #6FB6DC;
+    --ink-keppel: #48D6B6;
+    --ink-sea:    #7FDCA6;
+
+    --text-primary:    #E8F2F5;
+    --text-secondary:  #A9C4D2;
+    --text-muted:      #7C9BAE;
+    --text-inverse:    #0B1520;
+    --border:          rgba(226, 240, 244, 0.12);
+    --border-strong:   rgba(226, 240, 244, 0.26);
+
+    --hero-base:   #0A1622;
+    --hero-accent: #5CC8A0;
+    --canvas-line: 130,190,225;
+    --canvas-node: 150,210,240;
+    --canvas-cursor: 170,225,255;
+
+    --shadow-1:   0 1px 3px rgba(0, 0, 0, .40), 0 1px 2px rgba(0, 0, 0, .30);
+    --shadow-2:   0 3px 8px rgba(0, 0, 0, .35), 0 2px 4px rgba(0, 0, 0, .25);
+    --shadow-3:   0 10px 24px rgba(0, 0, 0, .40), 0 6px 8px rgba(0, 0, 0, .28);
+    --shadow-4:   0 14px 30px rgba(0, 0, 0, .45), 0 10px 12px rgba(0, 0, 0, .30);
+}
+
+/* ---------- Theme toggle ---------- */
+nav .nav-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin-left: 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+}
+nav .nav-theme-toggle:hover {
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+  background: var(--surface-3);
+}
+nav .nav-theme-toggle svg { width: 17px; height: 17px; display: block; }
+nav .nav-theme-toggle[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
 
 html { scroll-behavior: smooth; }
 
@@ -112,7 +179,7 @@ main {
     position: sticky;
     top: 0;
     z-index: 20;
-    background: rgba(255, 255, 255, 0.85);
+    background: var(--surface-1);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border);
 }
@@ -954,34 +1021,51 @@ code {
 .hero > .portrait,
 .hero > .hero-text { position: relative; z-index: 1; }
 
-/* Hero sits on the dark navy shader canvas — remap text to light for contrast */
-.hero {
-    color: #EAF3F6;
-    color: rgba(234, 243, 246, 0.96);
-}
+/* Hero sits on the shader canvas — text color follows the theme.
+   Light theme: pale hero with dark text; Dark theme: navy hero with light text. */
+.hero { color: #1C3A52; }
 .hero h1,
 .hero .hero-role,
-.hero .lead { color: #F2F7F9; }
-.hero p.lead { color: rgba(226, 240, 244, 0.78); }
+.hero .lead { color: #152F45; }
+.hero p.lead { color: rgba(20, 55, 80, 0.78); }
 .hero h1 .accent,
-.hero .hero-text .accent { color: #48D6B6; }
+.hero .hero-text .accent,
+.hero .accent { color: var(--ink-keppel); }
 .hero .hero-badge {
+    color: #123A55;
+    border-color: rgba(18, 58, 85, 0.45);
+    background: rgba(255, 255, 255, 0.62);
+}
+.hero .btn-outline {
+    color: #153A58;
+    border-color: rgba(18, 58, 85, 0.5);
+    background: transparent;
+}
+.hero .btn-outline:hover {
+    color: #0E2A42;
+    border-color: #2A5E85;
+    background: rgba(255, 255, 255, 0.45);
+}
+.hero .social-icon svg { color: #1B4C6E; }
+.hero .social-icon:hover svg { color: #0E3553; }
+
+[data-theme="dark"] .hero { color: #EAF3F6; }
+[data-theme="dark"] .hero h1,
+[data-theme="dark"] .hero .hero-role,
+[data-theme="dark"] .hero .lead { color: #F2F7F9; }
+[data-theme="dark"] .hero p.lead { color: rgba(226, 240, 244, 0.78); }
+[data-theme="dark"] .hero h1 .accent,
+[data-theme="dark"] .hero .hero-text .accent,
+[data-theme="dark"] .hero .accent { color: #48D6B6; }
+[data-theme="dark"] .hero .hero-badge {
     color: #CFE9EC;
     border-color: rgba(191, 231, 234, 0.45);
     background: rgba(22, 49, 68, 0.55);
 }
-.hero .btn-outline {
-    color: #E7F2F5;
-    border-color: rgba(191, 231, 234, 0.5);
-    background: transparent;
-}
-.hero .btn-outline:hover {
-    color: #FFFFFF;
-    border-color: #BFE7EA;
-    background: rgba(255, 255, 255, 0.08);
-}
-.hero .social-icon svg { color: #D8EBEE; }
-.hero .social-icon:hover svg { color: #FFFFFF; }
+[data-theme="dark"] .hero .btn-outline { color: #E7F2F5; border-color: rgba(191, 231, 234, 0.5); background: transparent; }
+[data-theme="dark"] .hero .btn-outline:hover { color: #FFFFFF; border-color: #BFE7EA; background: rgba(255, 255, 255, 0.08); }
+[data-theme="dark"] .hero .social-icon svg { color: #D8EBEE; }
+[data-theme="dark"] .hero .social-icon:hover svg { color: #FFFFFF; }
 
 .portrait img,
 .portrait .avatar-fallback { will-change: transform; }

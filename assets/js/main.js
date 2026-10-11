@@ -112,6 +112,9 @@
             '<header data-injected class="site-header">' +
             '  <nav class="nav container" aria-label="Primary">' +
             '    <a class="brand" href="' + R + 'index.html">spencer<span class="dot">-</span>anderson</a>' +
+            '    <div class="nav-theme">' +
+            '      <button class="nav-theme-toggle" type="button" aria-label="Toggle theme" aria-pressed="false" title="Toggle theme"></button>' +
+            '    </div>' +
             '    <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">' +
             '      <span></span><span></span><span></span>' +
             '    </button>' +
@@ -205,6 +208,14 @@
         var LINK = 130;       // px threshold for drawing a connector
         var LINK_S = 90;      // px radius for mouse-linked connectors
 
+        function rgb(name, fallback) {
+            try {
+                var v = window.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+                if (/^\d+$/.test(v) || /^\d+\s*,\s*\d+\s*,\s*\d+$/.test(v)) return v.replace(/\s+/g, '');
+            } catch (e) {}
+            return fallback;
+        }
+
         function size() {
             var r = hero.getBoundingClientRect();
             w = Math.max(1, r.width);
@@ -268,7 +279,7 @@
                     var d2 = dx * dx + dy * dy;
                     if (d2 < LINK * LINK) {
                         var a = 1 - Math.sqrt(d2) / LINK;
-                        ctx.strokeStyle = 'rgba(122,164,188,' + (a * .22).toFixed(3) + ')';
+                        ctx.strokeStyle = 'rgba(' + rgb('--canvas-line', '122,164,188') + ',' + (a * .22).toFixed(3) + ')';
                         ctx.beginPath();
                         ctx.moveTo(n.x, n.y);
                         ctx.lineTo(o.x, o.y);
@@ -285,7 +296,7 @@
                     if (md2 < LINK_S * LINK_S * 4) {
                         var ma = 1 - Math.sqrt(md2) / (LINK_S * 2);
                         if (ma > 0) {
-                            ctx.strokeStyle = 'rgba(94,177,197,' + (ma * .45).toFixed(3) + ')';
+                            ctx.strokeStyle = 'rgba(' + rgb('--canvas-cursor', '94,177,197') + ',' + (ma * .45).toFixed(3) + ')';
                             ctx.beginPath();
                             ctx.moveTo(n.x, n.y);
                             ctx.lineTo(mouse.x, mouse.y);
@@ -297,7 +308,7 @@
             // nodes
             for (i = 0; i < nodes.length; i++) {
                 n = nodes[i];
-                ctx.fillStyle = 'rgba(132,177,206,.55)';
+                ctx.fillStyle = 'rgba(' + rgb('--canvas-node', '132,177,206') + ',.55)';
                 ctx.beginPath();
                 ctx.arc(n.x, n.y, n.r, 0, 6.2832);
                 ctx.fill();
@@ -511,24 +522,32 @@
         var uniforms, rafId = 0, running = false, visible = true;
         var resizeTimer = null;
         var ro, wh = { w: 0, h: 0 };
-        function computeColor() {
-            try {
-                var cs = window.getComputedStyle(document.documentElement);
-                var c = cs.getPropertyValue('--color-primary').trim();
-                if (c) return c;
-            } catch (err) {}
-            return '#3b82f6';
+        function hexToColor(v, fallback) {
+            v = (v || '').trim();
+            if (/^#[0-9a-fA-F]{6}$/.test(v)) return new THREE.Color(v);
+            if (/^#[0-9a-fA-F]{3}$/.test(v)) {
+                var s = v.slice(1);
+                return new THREE.Color('#' + s[0] + s[0] + s[1] + s[1] + s[2] + s[2]);
+            }
+            return fallback;
         }
-        function getAccent() {
-            var c = computeColor();
-            if (/^#[0-9a-fA-F]{6}$/.test(c)) return c;
-            return c;
+        function themeBase() {
+            try {
+                var v = window.getComputedStyle(document.documentElement).getPropertyValue('--hero-base').trim();
+                if (v) return v;
+            } catch (e) {}
+            return '#0A1622';
+        }
+        function themeAccent() {
+            try {
+                var v = window.getComputedStyle(document.documentElement).getPropertyValue('--hero-accent').trim();
+                if (v) return v;
+            } catch (e) {}
+            return '#5CC8A0';
         }
         try {
-            var accent = getAccent();
             renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: false, antialias: false });
             renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-            renderer.setClearColor(0x0A1622, 1);
             scene = new THREE.Scene();
             var w = window.innerWidth, h = window.innerHeight;
             camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -537,12 +556,20 @@
                 time: { value: 0 },
                 resolution: { value: new THREE.Vector2(w, h) },
                 aspect: { value: w / h },
-                accent: { value: new THREE.Color(accent) }
+                base:   { value: hexToColor(themeBase(), new THREE.Color(0x0A1622)) },
+                accent: { value: hexToColor(themeAccent(), new THREE.Color(0x5CC8A0)) }
             };
+            function applyThemeToShader() {
+                uniforms.base.value.copy(hexToColor(themeBase(), new THREE.Color(0x0A1622)));
+                uniforms.accent.value.copy(hexToColor(themeAccent(), new THREE.Color(0x5CC8A0)));
+                renderer.setClearColor(hexToColor(themeBase(), new THREE.Color(0x0A1622)), 1);
+            }
+            applyThemeToShader();
+            document.documentElement.addEventListener('themechange', applyThemeToShader);
             material = new THREE.ShaderMaterial({
                 uniforms: uniforms,
                 vertexShader: 'varying vec2 vUv;\nvoid main(){\nvUv = uv;\ngl_Position = vec4(position, 1.0);\n}',
-                fragmentShader: 'uniform float time;\nuniform vec2 resolution;\nuniform float aspect;\nuniform vec3 accent;\nvarying vec2 vUv;\nvoid main(){\nfloat t = time * 0.12;\nvec2 p = vUv - 0.5;\np.x *= aspect;\nfloat f = sin(p.x*1.2 + t) * 0.18 + sin(p.y*1.6 - t*0.8) * 0.14 + sin((p.x+p.y)*0.9 + t*0.5)*0.16;\nvec3 base = vec3(0.06, 0.08, 0.12);\nvec3 col = mix(base, accent, 0.25 + f*0.6);\ncol = mix(col, base*0.8, 0.35);\ngl_FragColor = vec4(col, 1.0);\n}'
+                fragmentShader: 'uniform float time;\nuniform vec2 resolution;\nuniform float aspect;\nuniform vec3 base;\nuniform vec3 accent;\nvarying vec2 vUv;\nvoid main(){\nfloat t = time * 0.12;\nvec2 p = vUv - 0.5;\np.x *= aspect;\nfloat f = sin(p.x*1.2 + t) * 0.18 + sin(p.y*1.6 - t*0.8) * 0.14 + sin((p.x+p.y)*0.9 + t*0.5)*0.16;\nvec3 col = mix(base, accent, 0.25 + f*0.6);\ncol = mix(col, base*0.8, 0.35);\ngl_FragColor = vec4(col, 1.0);\n}'
             });
             mesh = new THREE.Mesh(geo, material);
             scene.add(mesh);
@@ -973,6 +1000,38 @@
         });
     }
 
+    function bindTheme() {
+        var btn = document.querySelector(".nav-theme-toggle");
+        if (!btn) return;
+        var SUN =
+            '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+            '<circle cx="12" cy="12" r="4"/>' +
+            '<line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/>' +
+            '<line x1="5" y1="12" x2="2" y2="12"/><line x1="22" y1="12" x2="19" y2="12"/>' +
+            '<line x1="4.6" y1="4.6" x2="6.7" y2="6.7"/><line x1="17.3" y1="17.3" x2="19.4" y2="19.4"/>' +
+            '<line x1="19.4" y1="4.6" x2="17.3" y2="6.7"/><line x1="6.7" y1="17.3" x2="4.6" y2="19.4"/>' +
+            '</svg>';
+        var MOON =
+            '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>' +
+            '</svg>';
+        var isDark = function () {
+            return (window.SeaTheme ? window.SeaTheme.current() : "light") === "dark";
+        };
+        var render = function () {
+            var dark = isDark();
+            btn.innerHTML = dark ? SUN : MOON;
+            btn.setAttribute("aria-pressed", dark ? "true" : "false");
+            btn.title = dark ? "Switch to light theme" : "Switch to dark theme";
+        };
+        render();
+        btn.addEventListener("click", function () {
+            if (!window.SeaTheme) return;
+            window.SeaTheme.set(isDark() ? "light" : "dark");
+        });
+        document.documentElement.addEventListener("themechange", render);
+    }
+
     function init() {
         var headerSlot = document.querySelector("[data-header]");
         var footerSlot = document.querySelector("[data-footer]");
@@ -984,6 +1043,7 @@
         }
         injectSocial();
         addNavListeners();
+        bindTheme();
         initMotion();
     }
 
