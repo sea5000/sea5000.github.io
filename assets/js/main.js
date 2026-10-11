@@ -472,7 +472,7 @@
             var dy = e.clientY - cy;
             var dist = Math.sqrt(dx * dx + dy * dy);
             if (dist <= PROX_RADIUS) {
-                targetSpeed = Math.min(2.5, BASE_SPEED + (1 - dist / PROX_RADIUS) * (MAX_SPEED - BASE_SPEED));
+                targetSpeed = MAX_SPEED;
             } else {
                 targetSpeed = BASE_SPEED;
             }
@@ -526,7 +526,7 @@
         }
         try {
             var accent = getAccent();
-            renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: false });
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: false, antialias: false });
             renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
             renderer.setClearColor(0x0A1622, 1);
             scene = new THREE.Scene();
@@ -542,7 +542,7 @@
             material = new THREE.ShaderMaterial({
                 uniforms: uniforms,
                 vertexShader: 'varying vec2 vUv;\nvoid main(){\nvUv = uv;\ngl_Position = vec4(position, 1.0);\n}',
-                fragmentShader: 'uniform float time;\nuniform vec2 resolution;\nuniform float aspect;\nuniform vec3 accent;\nvarying vec2 vUv;\nvoid main(){\nfloat t = time * 0.12;\nvec2 p = vUv - 0.5;\np.x *= aspect;\nfloat f = sin(p.x*1.2 + t) * 0.18 + sin(p.y*1.6 - t*0.8) * 0.14 + sin((p.x+p.y)*0.9 + t*0.5)*0.16;\nvec3 base = vec3(0.06, 0.08, 0.12);\nvec3 col = mix(base, accent, 0.25 + f*0.6);\ncol = mix(col, base*0.8, 0.35);\ngl_FragColor = vec4(col, 0.55);\n}'
+                fragmentShader: 'uniform float time;\nuniform vec2 resolution;\nuniform float aspect;\nuniform vec3 accent;\nvarying vec2 vUv;\nvoid main(){\nfloat t = time * 0.12;\nvec2 p = vUv - 0.5;\np.x *= aspect;\nfloat f = sin(p.x*1.2 + t) * 0.18 + sin(p.y*1.6 - t*0.8) * 0.14 + sin((p.x+p.y)*0.9 + t*0.5)*0.16;\nvec3 base = vec3(0.06, 0.08, 0.12);\nvec3 col = mix(base, accent, 0.25 + f*0.6);\ncol = mix(col, base*0.8, 0.35);\ngl_FragColor = vec4(col, 1.0);\n}'
             });
             mesh = new THREE.Mesh(geo, material);
             scene.add(mesh);
