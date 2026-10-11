@@ -954,6 +954,35 @@ code {
 .hero > .portrait,
 .hero > .hero-text { position: relative; z-index: 1; }
 
+/* Hero sits on the dark navy shader canvas — remap text to light for contrast */
+.hero {
+    color: #EAF3F6;
+    color: rgba(234, 243, 246, 0.96);
+}
+.hero h1,
+.hero .hero-role,
+.hero .lead { color: #F2F7F9; }
+.hero p.lead { color: rgba(226, 240, 244, 0.78); }
+.hero h1 .accent,
+.hero .hero-text .accent { color: #48D6B6; }
+.hero .hero-badge {
+    color: #CFE9EC;
+    border-color: rgba(191, 231, 234, 0.45);
+    background: rgba(22, 49, 68, 0.55);
+}
+.hero .btn-outline {
+    color: #E7F2F5;
+    border-color: rgba(191, 231, 234, 0.5);
+    background: transparent;
+}
+.hero .btn-outline:hover {
+    color: #FFFFFF;
+    border-color: #BFE7EA;
+    background: rgba(255, 255, 255, 0.08);
+}
+.hero .social-icon svg { color: #D8EBEE; }
+.hero .social-icon:hover svg { color: #FFFFFF; }
+
 .portrait img,
 .portrait .avatar-fallback { will-change: transform; }
 
