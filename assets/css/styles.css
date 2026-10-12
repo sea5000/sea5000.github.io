@@ -168,7 +168,7 @@ p { margin: 0 0 var(--space-4); }
 
 main {
     flex: 1 0 auto;
-    padding: var(--space-16) 0;
+    padding: 0;
 }
 
 .section { margin-bottom: var(--space-16); }
@@ -408,7 +408,7 @@ main {
     display: flex;
     align-items: center;
     gap: var(--space-16);
-    padding: var(--space-16) clamp(1rem, 4vw, var(--space-6));
+    padding: 0 clamp(1rem, 4vw, var(--space-6));
 }
 
 .hero-text {
@@ -992,7 +992,7 @@ code {
     .hero {
         flex-direction: column;
         gap: var(--space-8);
-        padding: var(--space-8) clamp(1rem, 4vw, var(--space-6));
+        padding: 0 clamp(1rem, 4vw, var(--space-6));
     }
     .hero-badge {
         display: block;
