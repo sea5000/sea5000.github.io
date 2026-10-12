@@ -112,9 +112,6 @@
             '<header data-injected class="site-header">' +
             '  <nav class="nav container" aria-label="Primary">' +
             '    <a class="brand" href="' + R + 'index.html">spencer<span class="dot">-</span>anderson</a>' +
-            '    <div class="nav-theme">' +
-            '      <button class="nav-theme-toggle" type="button" aria-label="Toggle theme" aria-pressed="false" title="Toggle theme"></button>' +
-            '    </div>' +
             '    <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">' +
             '      <span></span><span></span><span></span>' +
             '    </button>' +
@@ -124,6 +121,9 @@
             '    <div class="nav-social">' +
             '      ' + socialIcon("github", SOCIAL.github, "GitHub") +
             '      ' + socialIcon("linkedin", SOCIAL.linkedin, "LinkedIn") +
+            '    </div>' +
+            '    <div class="nav-theme">' +
+            '      <button class="nav-theme-toggle" type="button" aria-label="Toggle theme" aria-pressed="false" title="Toggle theme"></button>' +
             '    </div>' +
             '  </nav>' +
             "</header>",
@@ -569,7 +569,7 @@
             material = new THREE.ShaderMaterial({
                 uniforms: uniforms,
                 vertexShader: 'varying vec2 vUv;\nvoid main(){\nvUv = uv;\ngl_Position = vec4(position, 1.0);\n}',
-                fragmentShader: 'uniform float time;\nuniform vec2 resolution;\nuniform float aspect;\nuniform vec3 base;\nuniform vec3 accent;\nvarying vec2 vUv;\nvoid main(){\nfloat t = time * 0.12;\nvec2 p = vUv - 0.5;\np.x *= aspect;\nfloat f = sin(p.x*1.2 + t) * 0.18 + sin(p.y*1.6 - t*0.8) * 0.14 + sin((p.x+p.y)*0.9 + t*0.5)*0.16;\nvec3 col = mix(base, accent, 0.25 + f*0.6);\ncol = mix(col, base*0.8, 0.35);\ngl_FragColor = vec4(col, 1.0);\n}'
+                fragmentShader: 'uniform float time;\nuniform vec2 resolution;\nuniform float aspect;\nuniform vec3 base;\nuniform vec3 accent;\nvarying vec2 vUv;\nvoid main(){\nfloat t = time * 0.12;\nvec2 p = vUv - 0.5;\np.x *= aspect;\nfloat f = sin(p.x*1.2 + t) * 0.18 + sin(p.y*1.6 - t*0.8) * 0.14 + sin((p.x+p.y)*0.9 + t*0.5)*0.16;\nfloat lum = dot(base, vec3(0.3, 0.59, 0.11));\nfloat isLight = step(0.5, lum);\nfloat baseWeight = mix(0.95, 0.45, isLight);\nfloat blendAmt = clamp(0.05 + f*0.12, 0.0, 0.40);\nvec3 col = mix(base, accent, baseWeight * blendAmt);\ngl_FragColor = vec4(col, 1.0);\n}'
             });
             mesh = new THREE.Mesh(geo, material);
             scene.add(mesh);
@@ -735,6 +735,13 @@
                     y: 28,
                     duration: 0.7,
                     ease: 'power2.out',
+                    // immediateRender:false — do NOT freeze at the from-state on setup.
+                    // gsap.from renders the from-state immediately by default, and a
+                    // once:true ScrollTrigger that fires before the tween is fully
+                    // wired leaves in-view elements stuck at opacity 0 (the white-page
+                    // bug). With immediateRender:false the resting state stays visible;
+                    // below-the-fold els still animate in on their first intersection.
+                    immediateRender: false,
                     scrollTrigger: {
                         trigger: el,
                         start: 'top 88%',
