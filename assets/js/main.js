@@ -1,54 +1,9 @@
 (function () {
     "use strict";
 
-    /* ---------- Phase 6: cross-page transition overlay ---------- */
-    var vtNextHref = null;
-    try {
-        vtNextHref = window.sessionStorage.getItem('vt-next');
-        window.sessionStorage.removeItem('vt-next');
-    } catch (err) {
-        vtNextHref = null;
-    }
-
-    var vtOverlay = null;
-    if (window.gsap && document.body) {
-        vtOverlay = document.createElement('div');
-        vtOverlay.className = 'vt-overlay';
-        vtOverlay.setAttribute('aria-hidden', 'true');
-        document.body.appendChild(vtOverlay);
-
-        if (vtNextHref) {
-            gsap.fromTo(vtOverlay, { yPercent: 0 }, { yPercent: -101, duration: 0.38, ease: 'power2.inOut' });
-        } else {
-            gsap.set(vtOverlay, { yPercent: 101 });
-        }
-
-        // Wipe in, then navigate — capture phase so the native/View-Transitions path never double-fires
-        document.addEventListener('click', function (e) {
-            if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-            var a = e.target && e.target.closest ? e.target.closest('a') : null;
-            if (!a || a.target === '_blank' || a.hasAttribute('download')) return;
-            var raw = a.getAttribute('href') || '';
-            if (!raw || raw.charAt(0) === '#') return;
-            if (/^(mailto|tel|javascript):/i.test(raw)) return;
-            var href = a.href;
-            if (!href || href.indexOf(window.location.origin + '/') !== 0) return;
-            if (!/\.html?$/i.test(href.split('#')[0].split('?')[0])) return;
-            try {
-                window.sessionStorage.setItem('vt-next', href);
-            } catch (err2) {
-                return;
-            }
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            gsap.to(vtOverlay, {
-                yPercent: 0,
-                duration: 0.38,
-                ease: 'power2.inOut',
-                onComplete: function () { window.location.href = href; }
-            });
-        }, true);
-    }
+    /* ---------- Phase 6: cross-page transition (clean crossfade, no blocking curtain) ----------
+       The full-screen sweep overlay caused "white page" on every subpage — removed.
+       View Transitions (or graceful fallback) now handles the crossfade. */
 
     var SOCIAL = {
         github: "https://github.com/sea5000",
