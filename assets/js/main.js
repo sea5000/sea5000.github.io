@@ -147,7 +147,7 @@
     /* ---------- Phase 2: Hero particle field ---------- */
     function initHeroField(reduced) {
         if (reduced) return;
-        var hero = document.querySelector('.hero');
+        var hero = document.querySelector('.hero-band') || document.querySelector('.hero');
         if (!hero) return;
 
         var canvas = document.createElement('canvas');
@@ -167,6 +167,14 @@
             try {
                 var v = window.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
                 if (/^\d+$/.test(v) || /^\d+\s*,\s*\d+\s*,\s*\d+$/.test(v)) return v.replace(/\s+/g, '');
+            } catch (e) {}
+            return fallback;
+        }
+
+        function alpha(name, fallback) {
+            try {
+                var v = parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue(name));
+                if (isFinite(v)) return v;
             } catch (e) {}
             return fallback;
         }
@@ -234,7 +242,7 @@
                     var d2 = dx * dx + dy * dy;
                     if (d2 < LINK * LINK) {
                         var a = 1 - Math.sqrt(d2) / LINK;
-                        ctx.strokeStyle = 'rgba(' + rgb('--canvas-line', '122,164,188') + ',' + (a * .22).toFixed(3) + ')';
+                        ctx.strokeStyle = 'rgba(' + rgb('--canvas-line', '70,88,106') + ',' + (a * alpha('--canvas-line-alpha', .22)).toFixed(3) + ')';
                         ctx.beginPath();
                         ctx.moveTo(n.x, n.y);
                         ctx.lineTo(o.x, o.y);
@@ -251,7 +259,7 @@
                     if (md2 < LINK_S * LINK_S * 4) {
                         var ma = 1 - Math.sqrt(md2) / (LINK_S * 2);
                         if (ma > 0) {
-                            ctx.strokeStyle = 'rgba(' + rgb('--canvas-cursor', '94,177,197') + ',' + (ma * .45).toFixed(3) + ')';
+                            ctx.strokeStyle = 'rgba(' + rgb('--canvas-cursor', '34,50,66') + ',' + (ma * alpha('--canvas-cursor-alpha', .45)).toFixed(3) + ')';
                             ctx.beginPath();
                             ctx.moveTo(n.x, n.y);
                             ctx.lineTo(mouse.x, mouse.y);
@@ -263,7 +271,7 @@
             // nodes
             for (i = 0; i < nodes.length; i++) {
                 n = nodes[i];
-                ctx.fillStyle = 'rgba(' + rgb('--canvas-node', '132,177,206') + ',.55)';
+                ctx.fillStyle = 'rgba(' + rgb('--canvas-node', '48,64,80') + ',' + alpha('--canvas-node-alpha', .55) + ')';
                 ctx.beginPath();
                 ctx.arc(n.x, n.y, n.r, 0, 6.2832);
                 ctx.fill();
@@ -395,7 +403,7 @@
                 renderer: 'svg',
                 loop: true,
                 autoplay: true,
-                animationSpeed: 0.4,
+                animationSpeed: 0.2,
                 animationData: pulse
             });
         } catch (err) {
@@ -404,13 +412,13 @@
         }
         if (!anim) return;
         try {
-            anim.setSpeed(0.4);
+            anim.setSpeed(0.2);
         } catch (err) {}
 
-        // Proximity-reactive speed on a single rAF: 1.2 (base) far away, easing up to a 2.5 cap at
-        // the button center inside a 240px radius. Outside the radius it eases back to 1.2 (~0.6s).
-        var BASE_SPEED = 0.4;
-        var MAX_SPEED = 0.9;
+        // Proximity-reactive speed on a single rAF: 0.2 (base) far away, easing up to a 0.5 cap at
+        // the button center inside a 240px radius. Outside the radius it eases back to 0.2 (~0.6s).
+        var BASE_SPEED = 0.2;
+        var MAX_SPEED = 0.5;
         var PROX_RADIUS = 240;
         var targetSpeed = BASE_SPEED;
         var currentSpeed = BASE_SPEED;
@@ -461,7 +469,7 @@
 
     /* ---------- Phase 8: animated shader background behind hero (Three.js) ---------- */
     function initHeroShader(reduced) {
-        if (!document.querySelector('.hero')) return;
+        if (!document.querySelector('.hero-band') && !document.querySelector('.hero')) return;
         var canvas = document.getElementById('hero-shader');
         if (!canvas) return;
         if (typeof window.THREE === 'undefined') return;
@@ -471,7 +479,7 @@
             } catch (err) {}
             return;
         }
-        var hero = document.querySelector('.hero');
+        var hero = document.querySelector('.hero-band') || document.querySelector('.hero');
         if (!hero) return;
         var renderer, scene, camera, material, mesh;
         var uniforms, rafId = 0, running = false, visible = true;
@@ -500,6 +508,20 @@
             } catch (e) {}
             return '#5CC8A0';
         }
+        function themeWave() {
+            try {
+                var v = parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue('--hero-wave'));
+                if (isFinite(v)) return v;
+            } catch (e) {}
+            return 0.95;
+        }
+        function themeWaveAmp() {
+            try {
+                var v = parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue('--hero-wave-amp'));
+                if (isFinite(v)) return v;
+            } catch (e) {}
+            return 0.12;
+        }
         try {
             renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: false, antialias: false });
             renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -512,11 +534,15 @@
                 resolution: { value: new THREE.Vector2(w, h) },
                 aspect: { value: w / h },
                 base:   { value: hexToColor(themeBase(), new THREE.Color(0x0A1622)) },
-                accent: { value: hexToColor(themeAccent(), new THREE.Color(0x5CC8A0)) }
+                accent: { value: hexToColor(themeAccent(), new THREE.Color(0x5CC8A0)) },
+                wave:   { value: themeWave() },
+                waveAmp: { value: themeWaveAmp() }
             };
             function applyThemeToShader() {
                 uniforms.base.value.copy(hexToColor(themeBase(), new THREE.Color(0x0A1622)));
                 uniforms.accent.value.copy(hexToColor(themeAccent(), new THREE.Color(0x5CC8A0)));
+                uniforms.wave.value = themeWave();
+                uniforms.waveAmp.value = themeWaveAmp();
                 renderer.setClearColor(hexToColor(themeBase(), new THREE.Color(0x0A1622)), 1);
             }
             applyThemeToShader();
@@ -524,7 +550,7 @@
             material = new THREE.ShaderMaterial({
                 uniforms: uniforms,
                 vertexShader: 'varying vec2 vUv;\nvoid main(){\nvUv = uv;\ngl_Position = vec4(position, 1.0);\n}',
-                fragmentShader: 'uniform float time;\nuniform vec2 resolution;\nuniform float aspect;\nuniform vec3 base;\nuniform vec3 accent;\nvarying vec2 vUv;\nvoid main(){\nfloat t = time * 0.12;\nvec2 p = vUv - 0.5;\np.x *= aspect;\nfloat f = sin(p.x*1.2 + t) * 0.18 + sin(p.y*1.6 - t*0.8) * 0.14 + sin((p.x+p.y)*0.9 + t*0.5)*0.16;\nfloat lum = dot(base, vec3(0.3, 0.59, 0.11));\nfloat isLight = step(0.5, lum);\nfloat baseWeight = mix(0.95, 0.45, isLight);\nfloat blendAmt = clamp(0.05 + f*0.12, 0.0, 0.40);\nvec3 col = mix(base, accent, baseWeight * blendAmt);\ngl_FragColor = vec4(col, 1.0);\n}'
+                fragmentShader: 'uniform float time;\nuniform vec2 resolution;\nuniform float aspect;\nuniform vec3 base;\nuniform vec3 accent;\nuniform float wave;\nuniform float waveAmp;\nvarying vec2 vUv;\nvoid main(){\nfloat t = time * 0.12;\nvec2 p = vUv - 0.5;\np.x *= aspect;\nfloat f = sin(p.x*1.2 + t) * 0.18 + sin(p.y*1.6 - t*0.8) * 0.14 + sin((p.x+p.y)*0.9 + t*0.5)*0.16;\nfloat amt = clamp(0.05 + f * waveAmp, 0.0, 0.6);\nvec3 col = mix(base, accent, wave * amt);\ngl_FragColor = vec4(col, 1.0);\n}'
             });
             mesh = new THREE.Mesh(geo, material);
             scene.add(mesh);

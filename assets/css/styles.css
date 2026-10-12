@@ -16,11 +16,16 @@
     --ink-sea:    color-mix(in srgb, var(--medium-sea-green) 40%, black);
 
     /* Hero surface + paint colors (JS reads these for the shader + 2D nodes) */
-    --hero-base:   #FFFFFF;
+    --hero-base:   #EDEDED;
     --hero-accent: #6A8CA8;
-    --canvas-line: 122,156,182;
-    --canvas-node: 104,134,160;
-    --canvas-cursor: 82,122,152;
+    --hero-wave:     0.9;
+    --hero-wave-amp: 0.30;
+    --canvas-line: 70,88,106;
+    --canvas-node: 48,64,80;
+    --canvas-cursor: 34,50,66;
+    --canvas-node-alpha: .7;
+    --canvas-line-alpha: .3;
+    --canvas-cursor-alpha: .55;
 
     --accent:       var(--ink-keppel);
     --accent-soft:  var(--keppel);
@@ -88,9 +93,14 @@
 
     --hero-base:   #0A1622;
     --hero-accent: #5CC8A0;
+    --hero-wave:     0.95;
+    --hero-wave-amp: 0.12;
     --canvas-line: 130,190,225;
     --canvas-node: 150,210,240;
     --canvas-cursor: 170,225,255;
+    --canvas-node-alpha: .55;
+    --canvas-line-alpha: .22;
+    --canvas-cursor-alpha: .45;
 
     --shadow-1:   0 1px 3px rgba(0, 0, 0, .40), 0 1px 2px rgba(0, 0, 0, .30);
     --shadow-2:   0 3px 8px rgba(0, 0, 0, .35), 0 2px 4px rgba(0, 0, 0, .25);
@@ -405,6 +415,8 @@ main {
 }
 
 .hero {
+    position: relative;
+    z-index: 1;
     display: flex;
     align-items: center;
     gap: var(--space-16);
@@ -992,7 +1004,6 @@ code {
     .hero {
         flex-direction: column;
         gap: var(--space-8);
-        padding: 0 clamp(1rem, 4vw, var(--space-6));
     }
     .hero-badge {
         display: block;
@@ -1028,8 +1039,18 @@ code {
 
 /* ================= Motion & polish ================= */
 
+/* Full-bleed hero band: hosts the particle canvases edge-to-edge. The
+   vertical padding lives here, and the canvases are inset:0, so the
+   particles fill the padding too. */
+.hero-band {
+    position: relative;
+    padding: clamp(2rem, 5vh, 3.5rem) 0;
+    background: var(--hero-base);
+    overflow: hidden;
+    isolation: isolate;
+}
+
 /* Hero canvas backdrop (injected by JS) */
-.hero { position: relative; }
 #hero-shader { position:absolute; inset:0; width:100%; height:100%; z-index:-1; opacity:1; pointer-events:none; }
 .hero-field {
     position: absolute;
@@ -1275,7 +1296,7 @@ code {
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
     padding: 14px 0;
-    margin: 48px 0 8px;
+    margin: 0 0 8px;
 }
 
 .marquee-track {
