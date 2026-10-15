@@ -181,6 +181,10 @@ main {
     padding: 0;
 }
 
+/* Inner pages (about, projects, case studies) get a little breathing room
+   between the sticky nav and the first block of content. */
+main.container { padding-top: var(--space-8); }
+
 .section { margin-bottom: var(--space-16); }
 .section:last-child { margin-bottom: 0; }
 
@@ -999,7 +1003,9 @@ code {
     .nav-social { display: none; }
     .nav-theme { margin-left: var(--space-2); }
 
-    main { padding: var(--space-12) 0; }
+    /* Index: hero band sits flush under the nav (no gap above the particles). */
+    main { padding: 0 0 var(--space-12); }
+    main.container { padding-top: var(--space-6); padding-bottom: var(--space-12); }
 
     .hero {
         flex-direction: column;

@@ -10,7 +10,7 @@
             var saved = localStorage.getItem(KEY);
             if (saved === 'dark' || saved === 'light') return saved;
         } catch (e) {}
-        return 'light';
+        return 'dark';
     }
 
     function apply(name) {

@@ -2,7 +2,7 @@
     "use strict";
 
     /* ---------- Phase 6: cross-page transition (clean crossfade, no blocking curtain) ----------
-       The full-screen sweep overlay caused "white page" on every subpage — removed.
+       The full-screen sweep overlay caused "white page" on every subpage - removed.
        View Transitions (or graceful fallback) now handles the crossfade. */
 
     var SOCIAL = {
@@ -96,7 +96,7 @@
             '        <span class="footer-brand">spencer<span class="dot">-</span>anderson</span>' +
             '        <p class="muted" style="margin-top:.5rem;font-size:var(--type-caption)">' +
             '          Intelligence analyst turned data scientist.<br>' +
-            '          Turning complex data into decisions.' +
+            '          I turn complex data into decisions.' +
             '        </p>' +
             '      </div>' +
             '      <div>' +
