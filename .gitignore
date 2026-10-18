@@ -7,3 +7,7 @@ critique.md
 # Personal documents (not exposed)
 *.md
 !README.md
+# local agent tooling
+.claude/
+.agents/
+skills-lock.json

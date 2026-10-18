@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en" data-depth="1">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Trip Data Visualizer: 18 Months of Trips, Mapped | Spencer E. Anderson</title>
+    <meta name="description" content="A Flask and Leaflet dashboard over eighteen months of Automatic Pro car logger exports: every trip as a polyline on a map, colored by MPG, with KPI cards, filters, and a per-trip detail panel.">
+    <link rel="stylesheet" href="../assets/css/styles.css?v=2">
+    <script src="../assets/js/theme.js"></script>
+</head>
+<body>
+
+    <div data-header data-current=""></div>
+
+    <main class="container">
+
+        <section class="project-hero">
+            <div data-reveal data-delay="0" class="tag-row" style="margin-top:0">
+                <span class="tag">Python</span>
+                <span class="tag">Flask</span>
+                <span class="tag">Leaflet</span>
+                <span class="tag">Geospatial</span>
+                <span class="tag">Data Visualization</span>
+            </div>
+            <h1 data-reveal data-delay="0">
+                Car Trip Data Visualizer
+            </h1>
+            <p data-reveal data-delay="0" class="lead meta">
+                A car logger I forgot about kept exporting every trip I ever made to a Google
+                Drive folder. About eighteen months of me, in spreadsheets, mostly hidden under
+                the fuel columns. This is the dashboard I built to read the other half:
+                where I'd actually gone, and how often I kept going there.
+            </p>
+            <div data-reveal data-delay="0" class="btn-row">
+                <a class="btn btn-primary" href="https://github.com/sea5000/automaticVisualizer" target="_blank" rel="noopener">View Code</a>
+                <a class="btn btn-outline" href="../projects.html">&larr; All Projects</a>
+            </div>
+        </section>
+
+        <div class="project-layout">
+
+            <div class="prose">
+                <h3>The folder</h3>
+                <p>
+                    The 2000 Ford Explorer was the family car. My dad&rsquo;s hand-me-down, the one
+                    my family had been in as long as I can remember. An Automatic Pro logger sat in
+                    it and quietly worked through the whole time I had it: every trip I made,
+                    where I went, how hard I braked, how many minutes I spent over 80. Each export
+                    went up to a Google Drive folder.
+                </p>
+                <p>I forgot about it.</p>
+                <p>
+                    Years later, after I&rsquo;d picked up Python and the rest of the data-processing
+                    toolkit, I found that folder again. The logger was installed for fuel
+                    consumption and total miles, and those were the columns I expected to read.
+                    The thing that kept me reading was the other half: where I&rsquo;d actually
+                    gone, and how often I&rsquo;d kept going there. So I built a dashboard for that.
+                </p>
+
+                <h3>What it shows</h3>
+                <p>
+                    One page, everything about a trip one click deep:
+                </p>
+                <ul>
+                    <li><strong>Every trip on a Leaflet map as a polyline, colored by MPG</strong>, with cluster markers and click-through from the whole set down to a single trip you can zoom into.</li>
+                    <li><strong>KPI cards for the filtered set:</strong> distance, MPG, fuel, cost, hard-event counts (hard acceleration, hard brakes, minutes over speed).</li>
+                    <li><strong>Three Chart.js bar charts:</strong> destination category, miles by month, MPG distribution. They all follow the same filters as the map.</li>
+                    <li><strong>A detail panel, one trip at a time,</strong> with the destination as a live Google Maps link, plus filters on top: date range, destination category, destination search.</li>
+                </ul>
+
+                <figure data-reveal data-delay="0">
+                    <img src="../assets/img/autoViz-overview.png" alt="The dashboard overview: every trip drawn as a polyline on a map, colored by MPG, with KPI cards and bar charts below" loading="lazy">
+                    <figcaption>The overview: every trip as a polyline, colored by MPG. Clusters fold the busy areas up until you click into them.</figcaption>
+                </figure>
+
+                <h3>The two things that were worth the trouble</h3>
+                <p>
+                    Two things about the Automatic Pro export were worth the trouble, and the code
+                    is mostly what deals with them:
+                </p>
+                <p>
+                    <strong>No header row.</strong> The sheet is twenty raw columns, and the order
+                    <em>is</em> the format: the app knows column four as <code>duration</code>,
+                    column thirteen as <code>map_url</code>, and so on, by index. The columns can
+                    disagree about types too. Duration shows up either as a fraction of a day or
+                    as <code>HH:MM</code>, both of them present in real exports, and the parser
+                    handles both.
+                </p>
+                <p>
+                    <strong>The route hides in a Google Maps URL.</strong> Each trip&rsquo;s
+                    <code>map_url</code> carries the entire route as an <em>encoded</em>
+                    polyline, <code>path=enc:&hellip;</code>. The app regexes it out, decodes it
+                    server-side, and thins anything over 100 points so the map stays light. What
+                    the API hands the frontend (<code>route</code>) is already a
+                    <code>[[lat, lng], &hellip;]</code> list ready to throw at Leaflet.
+                </p>
+
+                <figure data-reveal data-delay="160">
+                    <img src="../assets/img/autoViz-trip.png" alt="One selected trip: the route fills the map frame with the detail panel on the right" loading="lazy">
+                    <figcaption>
+                        Drilled into one trip: the route fills the frame on the left, and the
+                        detail panel on the right carries the numbers plus a live Google Maps
+                        link for the destination.
+                    </figcaption>
+                </figure>
+
+                <h3>Running it</h3>
+                <p>
+                    No database, no build step. The <code>.xlsx</code> files are the data store,
+                    and the app looks for exactly two filenames in the working directory,
+                    <code>Automatic Pro Trips.xlsx</code> and
+                    <code>Automatic Pro Trips (1).xlsx</code>. Honest footnote: it&rsquo;s built
+                    around the names Automatic Pro gives its exports, so &ldquo;renaming&rdquo;
+                    is a code edit, not a config option. A renamed export sitting there just
+                    silently won&rsquo;t load.
+                </p>
+                <p>
+                    The repo ships a synthetic 44-trip set regenerated from seed 2026 (fake
+                    towns, the real schema, no header row), so the same code you read is the
+                    code that runs. The real trips stay in that Drive folder.
+                    <code>places_cache.json</code> maps every trip&rsquo;s end coordinate to a
+                    place label and a category; it&rsquo;s optional, and without it the
+                    dashboard falls back to &ldquo;Unknown&rdquo;, the category chart goes flat,
+                    and the destination filters lose their names. Regenerate it with
+                    <code>geocode.py</code>, which reverse-geocodes the cluster centroids
+                    through Geoapify (an API key in <code>.env</code>).
+                </p>
+
+                <h3>The tiles cost one dead end</h3>
+                <p>
+                    The first pass used CARTO&rsquo;s dark tiles, which now quietly 401 without a
+                    paid key. I didn&rsquo;t want to buy an API key for a dashboard about a car
+                    I no longer drive, so the fix that stuck is stock OpenStreetMap tiles under
+                    a CSS invert filter. Looks fine, costs nothing, and the map underneath it
+                    doesn&rsquo;t change.
+                </p>
+
+                <h3>Tech &amp; approach</h3>
+                <p>
+                    <strong>Python</strong> throughout, and most of it small: <code>app.py</code>
+                    is a Flask app that parses the sheet, decodes the polylines, and serves the
+                    dashboard plus three routes (<code>/api/trips</code>,
+                    <code>/api/meta</code>, and the HTML). The frontend is
+                    <code>templates/index.html</code> with <code>static/app.js</code> and
+                    <code>static/style.css</code>: Leaflet 1.9.4 with MarkerCluster 1.5.3 for
+                    the map, Chart.js 4.4.1 for the bars, all off CDNs, no bundler.
+                    <code>make_sample_data.py</code> rebuilds the 44-trip seed set, and
+                    <code>geocode.py</code> is the standalone one-off that (re)builds the places
+                    cache.
+                </p>
+
+                <h3>What made it stick</h3>
+                <p>
+                    The map is the dashboard. The KPI cards and the filters sit around the
+                    polylines, because when I opened that folder I wasn&rsquo;t looking for
+                    fuel statistics, I was looking for where I&rsquo;d been. The 44 seed trips
+                    stand in for the 18 months of the real folder with the same columns, the
+                    same header-less format, and the same route hiding in a URL. Point the app
+                    at the real exports and the code path is identical; only the numbers
+                    change.
+                </p>
+            </div>
+
+            <aside data-reveal class="project-side">
+                <div class="card">
+                    <h3>Details</h3>
+                    <ul class="contact-list">
+                        <li>
+                            <span class="label">Role</span>
+                            <span class="value">Solo developer</span>
+                        </li>
+                        <li>
+                            <span class="label">Year</span>
+                            <span class="value">2026</span>
+                        </li>
+                        <li>
+                            <span class="label">Status</span>
+                            <span class="value">Running on synthetic seed data; real trips stay private</span>
+                        </li>
+                        <li>
+                            <span class="label">Stack</span>
+                            <span class="value">Python &middot; Flask &middot; Leaflet &middot; Chart.js</span>
+                        </li>
+                        <li>
+                            <span class="label">Link</span>
+                            <span class="value">
+                                <a href="https://github.com/sea5000/automaticVisualizer" target="_blank" rel="noopener">github.com/sea5000/automaticVisualizer</a>
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+
+        </div>
+    </main>
+
+    <div data-footer></div>
+
+    <script src="../assets/js/main.js"></script>
+</body>
+</html>

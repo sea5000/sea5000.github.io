@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" data-depth="1">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Emailer: Daily Portfolio Report by Email | Spencer E. Anderson</title>
+    <meta name="description" content="Stock Emailer: a Dockerized Python pipeline that computes a daily portfolio report and delivers it as an HTML email.">
+    <link rel="stylesheet" href="../assets/css/styles.css?v=2">
+    <script src="../assets/js/theme.js"></script>
+</head>
+<body>
+
+    <div data-header data-current=""></div>
+
+    <main class="container">
+
+        <section class="project-hero">
+            <div data-reveal data-delay="0" class="tag-row" style="margin-top:0">
+                <span class="tag">Python</span>
+                <span class="tag">Docker</span>
+                <span class="tag">SQLite</span>
+                <span class="tag">Amazon SES</span>
+                <span class="tag">Data Pipeline</span>
+            </div>
+            <h1 data-reveal data-delay="0">
+                Stock Emailer
+            </h1>
+            <p data-reveal data-delay="0" class="lead meta">
+                A daily email to myself with my whole portfolio on one page: total net gain
+                since purchase, portfolio-versus-benchmark return, and a two-panel chart,
+                rendered as HTML and sent to my inbox. One container, one cron, nothing to log into.
+            </p>
+            <div data-reveal data-delay="0" class="btn-row">
+                <a class="btn btn-primary" href="https://github.com/sea5000/stock-emailer" target="_blank" rel="noopener">View Code</a>
+                <a class="btn btn-outline" href="../projects.html">&larr; All Projects</a>
+            </div>
+        </section>
+
+        <div class="project-layout">
+
+            <div class="prose">
+                <h3>The problem</h3>
+                <p>
+                    My stocks are spread across a bunch of accounts: several brokers, an advisory, a
+                    couple of positions I keep where I first bought them. Each account has an app, and
+                    each app tells me how <em>it&rsquo;s</em> doing. None of them tell me how
+                    <em>my</em> portfolio is doing. And the one number I actually want, total net gain
+                    across everything, over time, since I bought, none of them compute.
+                </p>
+                <p>
+                    So I built it. A report that lands in my inbox every morning, before I open a
+                    portfolio app.
+                </p>
+
+                <h3>What it does</h3>
+                <p>
+                    Every cron run, it reads my position export, pulls a daily price series for each
+                    position, computes the numbers, draws a two-panel chart, wraps it in a
+                    self-contained HTML email, and sends it via Amazon SES.
+                </p>
+                <ul>
+                    <li><strong>Single source of truth:</strong> the broker CSV (symbol, quantity, cost basis, acquisition date). A SQLite ledger makes each held position a <em>lot</em>, so a position you bought months ago still shows its whole arc, not just today.</li>
+                    <li><strong>The headline number:</strong> total net gain/loss across all lots still held, dated from each lot&rsquo;s own acquisition date forward. Not market-value today minus market-value then; the lot-level sum that actually tracks "am I ahead of what I paid."</li>
+                    <li><strong>Cumulative return</strong> of the whole portfolio versus a benchmark over the same window, plus per-position price, day change, cost vs. market, and contribution to the whole.</li>
+                    <li><strong>A self-contained HTML email:</strong> the chart inlined as base64, no attachments, nothing fetched from a URL. Idempotent, and testable with a dry-run that touches no network.</li>
+                </ul>
+
+                <figure data-reveal data-delay="0">
+                    <img src="../assets/img/stock-emailer-total-net.png" alt="Two-panel chart: portfolio net gain over the last year on top, cumulative return versus benchmark below" loading="lazy">
+                    <figcaption>The two panels the email is built around: net gain over the last year (top) and portfolio versus benchmark cumulative return (bottom).</figcaption>
+                </figure>
+
+                <figure data-reveal data-delay="160">
+                    <img src="../assets/img/stock-emailer-email.png" alt="The rendered daily email with summary cards and the inline chart" loading="lazy">
+                    <figcaption>
+                        The morning email, as it arrives. Numbers are synthetic seed data; the chart and
+                        email are the real pipeline output (<code>run_sample.py</code> in the repo
+                        reproduces both).
+                    </figcaption>
+                </figure>
+
+                <h3>The shape of the pipeline</h3>
+                <p>
+                    One CSV in, one email out, and a handful of stages carrying the state in between:
+                </p>
+                <pre class="code" style="font-size:13px;overflow-x:auto">
+  CSV export &rarr; SQLite lots ledger &rarr; daily price pull
+     (broker)     (lots.db)              (per symbol)
+                                             |
+                                             v
+                              report math: net gain over time,
+                              per-position cost vs. market
+                                             |
+                                             v
+                              matplotlib two-panel chart    HTML builder:
+                              (total_net.png)       inline the chart, build
+                                                      the email
+                                                            |
+                                                            v
+                                                    Amazon SES, or dry-run
+                                                    (logs and saves, sends nothing)</pre>
+
+                <h3>Why it lives in a container</h3>
+                <p>
+                    The schedule has to happen on the days I forget about it, so the whole thing
+                    ships as a Docker image with two services in one compose file:
+                </p>
+                <ul>
+                    <li><strong>The cron service.</strong> Starts <code>cron</code>, writes its crontab from what the app holds, and runs the report on schedule. Standard output tees to a log the container owns, so <code>docker compose logs</code> shows the day it broke, not just that it went quiet.</li>
+                    <li><strong>The web service.</strong> The same image under gunicorn: a Flask preview UI where you render tomorrow&rsquo;s email today and edit a lot, and the next run picks it up, because both services open the same SQLite file in WAL mode.</li>
+                    <li>Data is a bind mount, credentials are a read-only host mount, nothing secret goes into the image. <code>DRY_RUN</code> is on by default, and the UI port binds to the LAN address, not <code>0.0.0.0</code>.</li>
+                </ul>
+                <p>
+                    The boring part works as intended: it sits on a home server and runs on a
+                    machine I have to think about once a year.
+                </p>
+
+                <h3>Running it for real vs. running the repo</h3>
+                <p>
+                    The README ships in two flavors. Point the CSV at your own broker export, set the
+                    SES environment variables, and run <code>main.py</code>. Or run
+                    <code>python3 run_sample.py</code> from the repo: a seeded, offline entry point
+                    that writes a synthetic position CSV and price history, builds the real ledger
+                    from them, and runs the <strong>real</strong> report pipeline end to end against
+                    that data. The code in the repo is the code that runs; the only fake in it is
+                    the numbers.
+                </p>
+
+                <h3>Tech &amp; approach</h3>
+                <p>
+                    <strong>Python</strong> throughout: <code>pandas</code> for the daily series,
+                    <code>matplotlib</code> for the chart, <code>sqlite3</code> for the ledger,
+                    <code>flask</code> for the preview UI, <code>boto3</code> for Amazon SES, and
+                    <code>numpy</code> underneath. Packaging is <strong>Docker</strong> with a
+                    <code>docker-compose.yml</code> carrying both services. No framework beyond Flask;
+                    the email HTML is built as a string in code, no template engine.
+                </p>
+
+                <h3>What made it stick</h3>
+                <p>
+                    The email is the product, not a side output. The chart gets inlined, the
+                    summary cards go on top, and the whole thing is one file that renders in any
+                    mail client. That one decision is what turns a data job into a daily brief
+                    I actually read.
+                </p>
+            </div>
+
+            <aside data-reveal class="project-side">
+                <div class="card">
+                    <h3>Details</h3>
+                    <ul class="contact-list">
+                        <li>
+                            <span class="label">Role</span>
+                            <span class="value">Solo developer</span>
+                        </li>
+                        <li>
+                            <span class="label">Year</span>
+                            <span class="value">2026</span>
+                        </li>
+                        <li>
+                            <span class="label">Status</span>
+                            <span class="value">In production on self-hosted Docker</span>
+                        </li>
+                        <li>
+                            <span class="label">Stack</span>
+                            <span class="value">Python &middot; SQLite &middot; Flask &middot; Amazon SES &middot; Docker</span>
+                        </li>
+                        <li>
+                            <span class="label">Link</span>
+                            <span class="value">
+                                <a href="https://github.com/sea5000/stock-emailer" target="_blank" rel="noopener">github.com/sea5000/stock-emailer</a>
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+
+        </div>
+    </main>
+
+    <div data-footer></div>
+
+    <script src="../assets/js/main.js"></script>
+</body>
+</html>
