@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" data-depth="1">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Timeline Visualizer: A Decade of Where I Was, as Forecast | Spencer E. Anderson</title>
+    <meta name="description" content="A Flask dashboard over a ten-year Google Location History export: a per-year heatmap of every position on a dark map, the yearly rhythms of where I moved, and a schedule forecast of where I'm most likely to be, by hour and by day of week.">
+    <link rel="stylesheet" href="../assets/css/styles.css?v=2">
+    <script src="../assets/js/theme.js"></script>
+</head>
+<body>
+
+    <div data-header data-current=""></div>
+
+    <main class="container">
+
+        <section class="project-hero">
+            <div data-reveal data-delay="0" class="tag-row" style="margin-top:0">
+                <span class="tag">Python</span>
+                <span class="tag">Flask</span>
+                <span class="tag">Leaflet</span>
+                <span class="tag">Geospatial</span>
+                <span class="tag">Forecasting</span>
+            </div>
+            <h1 data-reveal data-delay="0">
+                Google Timeline Visualizer
+            </h1>
+            <p data-reveal data-delay="0" class="lead meta">
+                I let Google Timeline record my location for a very long time, over ten
+                years. Then I got sick of being tracked, so I turned it off. But I
+                wanted a nice life timeline, a heatmap of where I actually was, so I
+                built this dashboard instead of just deleting the export.
+            </p>
+            <div data-reveal data-delay="0" class="btn-row">
+                <a class="btn btn-primary" href="https://github.com/sea5000/google-timeline" target="_blank" rel="noopener">View Code</a>
+                <a class="btn btn-outline" href="../projects.html">&larr; All Projects</a>
+            </div>
+        </section>
+
+        <div class="project-layout">
+
+            <div class="prose">
+                <h3>The export</h3>
+                <p>
+                    Google Location History is a JSON file that is, on paper, a log of
+                    every position fix the phone reports. Mine is fourteen years of
+                    that, 2013 to 2026: a little over two hundred thousand fixes spread
+                    across fifty-six thousand segments, plus a raw signal stream that
+                    carries motion states and travel modes on top of the positions. I
+                    was not going to read that file by hand.
+                </p>
+                <p>
+                    So the app does two jobs. First it collapses the raw points into a
+                    heatmap grid at the resolution you can actually look at, grouped by
+                    year, and clusters them into places, by how often I came back. The
+                    second job is the reason I built it: a forecast. Given my
+                    own history, where am I most likely to be, by hour of day and by
+                    day of week?
+                </p>
+
+                <h3>The forecast, first</h3>
+                <p>
+                    The dashboard opens on it, on purpose. Pick a place, or a whole
+                    region, and an ordinary weekday, and it tells you the shape of a
+                    normal day there: what time I leave, what time I come back, what
+                    I do in between, and the chance I am anywhere at any given hour.
+                    Underneath it is a lightweight Bayesian scheduling model. It does
+                    not pretend to be a neural net. It bins my history by hour and by
+                    day of week, smooths it a bit so one weird Tuesday does not
+                    dominate, and reads a probability back off the result. The
+                    narrative it prints, &ldquo;00:00 to 02:00 at Home, thirty percent
+                    chance&rdquo;, is generated from those bins, so the story and the
+                    chart cannot disagree.
+                </p>
+
+                <figure data-reveal data-delay="0">
+                    <img src="../assets/img/gtl-forecast.png" alt="The forecast card: a scope line, a story list of time blocks and places, summary chips, an activity chart by hour of day, and a most visited places table" loading="lazy">
+                    <figcaption>The forecast as it renders: the story list first, the likelihood curve by hour, then the places that day lands on.</figcaption>
+                </figure>
+
+                <h3>What the map shows</h3>
+                <p>
+                    The other two views are the heatmap and the places. The map is the
+                    dashboard, full width, and the KPIs and filters sit around it:
+                </p>
+                <ul>
+                    <li><strong>A per year heatmap of every position</strong> on a dark basemap, with an intensity slider and a filter that drops the big cities so the places I rarely visit stop disappearing under them.</li>
+                    <li><strong>Top places for that year,</strong> how far apart, how many visits, so the ten years of me read as movement, not just a smear.</li>
+                    <li><strong>Activity starts by hour of day,</strong> the same bins the forecast is built from, drawn as a bar chart so you can see the rhythm of the whole decade at a glance.</li>
+                    <li><strong>A most visited places table</strong> with category, visits, time spent, and last seen, one row per place, clickable to zoom the map in.</li>
+                </ul>
+
+                <figure data-reveal data-delay="160">
+                    <img src="../assets/img/gtl-overview.png" alt="The dashboard overview: a dark map with a year heatmap of every position, KPI cards across the top, and the top places list beside the map" loading="lazy">
+                    <figcaption>The overview: fourteen years of every position as a heatmap, the places I kept returning to marked, and the decade's headline numbers up top.</figcaption>
+                </figure>
+
+                <figure data-reveal data-delay="160">
+                    <img src="../assets/img/gtl-places.png" alt="The most visited places view: a table of places with category, visits, time, and last seen, full width below the map" loading="lazy">
+                    <figcaption>The places table, full width: where the visits went, by category, with how long and when it last happened.</figcaption>
+                </figure>
+
+                <h3>What the data costs to work with</h3>
+                <p>
+                    The file is big enough that the app has to be honest about what it
+                    is doing. It loads once, builds the heat grid and the place
+                    clusters in memory, and serves them from cache, so a reload does
+                    not re-parse fourteen years. The geocoder needs that same honesty, on disk. Reverse geocoding three thousand
+                    place clusters against Nominatim without a key is slow, so every
+                    resolved address goes into a local cache and the app only asks
+                    about the places it has not seen before. That cache is the real coordinates of my own places, so it stays behind a
+                    <code>.gitignore</code>, and the same goes for the export
+                    itself.
+                </p>
+                <p>
+                    The repo ships a self-contained <code>run_sample.py</code> instead:
+                    it regenerates a synthetic ten-year timeline from a fixed seed,
+                    the same schema, the same point density, no real locations, and
+                    runs the real app against it. The code you read is the code that
+                    runs. Point it at the real export and only the numbers change.
+                </p>
+
+                <h3>One dead end worth writing down</h3>
+                <p>
+                    The dark basemap I wanted was, it turns out, not one you can have
+                    for free anymore. Every keyless dark raster is either gone or
+                    gated, so the fix that stuck is standard OpenStreetMap tiles
+                    under a CSS invert filter. It costs nothing, it renders everywhere, and
+                    the OpenFreeMap vector styles are still there if you
+                    want the cartographic look back.
+                </p>
+
+                <h3>Tech &amp; approach</h3>
+                <p>
+                    <strong>Python</strong> throughout, and most of it one file:
+                    <code>app.py</code> is a Flask app that parses the export, dedupes
+                    the heat cells on a four-decimal-degree grid, clusters places out of
+                    it, and serves the dashboard plus a small API
+                    (<code>/api/heat</code>, <code>/api/places</code>,
+                    <code>/api/forecast</code>). The frontend is
+                    <code>index.html</code> with <code>static/app.js</code>:
+                    Leaflet for the map, Chart.js for the bars and the likelihood
+                    curve, all off the vendor folder, no build step.
+                    <code>run_sample.py</code> is the standalone seeded entry point.
+                </p>
+
+                <h3>What made it stick</h3>
+                <p>
+                    The forecast is the point, not the map. The heatmap and the places
+                    table are why you trust it, because the model is my own history,
+                    not a generic prior. When it says that on a normal Tuesday afternoon I am
+                    most likely back at the same place, hour by hour, that
+                    is not a guess. That is the decade I let it record, smoothed
+                    just enough to read.
+                </p>
+            </div>
+
+            <aside data-reveal class="project-side">
+                <div class="card">
+                    <h3>Details</h3>
+                    <ul class="contact-list">
+                        <li>
+                            <span class="label">Role</span>
+                            <span class="value">Solo developer</span>
+                        </li>
+                        <li>
+                            <span class="label">Year</span>
+                            <span class="value">2026</span>
+                        </li>
+                        <li>
+                            <span class="label">Status</span>
+                            <span class="value">Running on a synthetic seed; the real decade stays private</span>
+                        </li>
+                        <li>
+                            <span class="label">Stack</span>
+                            <span class="value">Python &middot; Flask &middot; Leaflet &middot; Chart.js</span>
+                        </li>
+                        <li>
+                            <span class="label">Link</span>
+                            <span class="value">
+                                <a href="https://github.com/sea5000/google-timeline" target="_blank" rel="noopener">github.com/sea5000/google-timeline</a>
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+
+        </div>
+    </main>
+
+    <div data-footer></div>
+
+    <script src="../assets/js/main.js"></script>
+</body>
+</html>
